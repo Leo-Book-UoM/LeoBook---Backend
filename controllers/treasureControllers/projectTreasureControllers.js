@@ -30,12 +30,30 @@ const addBudgetDetails = async (req, res) => {
     }
 };
 
-const deleteBudgetDetailes = async(req, res) => {
-    const {id} = req.params;
-    
-}
+const deleteBudgetDetailes = async (req, res) => {
+    const { id } = req.query; 
+    if (!id) {
+        return res.status(400).json({ message: 'ID is required' });
+    }
+
+    try {
+        const deleteRow = await pool.query(`DELETE FROM public."budgetRepotDetailes" WHERE "itemId" = $1 RETURNING *`, [id]);
+        
+        if (deleteRow.rows.length === 0) {
+            return res.status(404).json({ message: 'Item not found' });
+        }
+
+        console.log('Item deleted:', deleteRow.rows[0]);
+        res.status(200).json({ message: 'Item deleted successfully', deleteRow: deleteRow.rows[0] });
+    } catch (error) {
+        console.error("Error deleting item:", error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 
 module.exports = {
     getBudgetDetailes,
-    addBudgetDetails
+    addBudgetDetails,
+    deleteBudgetDetailes
 };

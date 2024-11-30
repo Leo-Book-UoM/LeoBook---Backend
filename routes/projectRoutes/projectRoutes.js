@@ -1,6 +1,6 @@
 const express = require('express');
 const { getAllProjects, getFilteredProjects } = require('../../controllers/projectControllers/projectControllers');
-const {getBudgetDetailes, addBudgetDetails } = require('../../controllers/treasureControllers/projectTreasureControllers');
+const {getBudgetDetailes, addBudgetDetails, deleteBudgetDetailes } = require('../../controllers/treasureControllers/projectTreasureControllers');
 
 const router = express.Router();
 
@@ -9,5 +9,6 @@ router.get('/api/projects', getAllProjects);
 router.get('/api/projects/7', getFilteredProjects);
 router.get('/api/treasure', getBudgetDetailes);
 router.post('/api/treasure', addBudgetDetails);
+router.delete('/api/treasure',deleteBudgetDetailes);
 
 module.exports = router;
