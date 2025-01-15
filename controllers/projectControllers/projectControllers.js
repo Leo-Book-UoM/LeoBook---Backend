@@ -48,8 +48,52 @@ const createProject = async (req, res) => {
   }
 };
 
+//create a new task
+
+const createTask = async (req, res) => {
+  // Destructure properties from the request body
+  const { projectid, taskId, taskName, taskDescription, taskDate, markAsDone } = req.body;
+
+  // Generate the current timestamp for createdDate
+  const createdDate = new Date();
+
+  try {
+    // SQL query for inserting a new task
+    const query = `
+    INSERT INTO public."projectTimelines" 
+    ("projectId", "taskId", "taskName", "taskDescription", "createdDate", "taskDate", "markAsDone") 
+    VALUES ($1, $2, $3, $4, $5, $6, $7) 
+    RETURNING *;
+  `;
+
+    // Values for the query parameters
+    const values = [
+      projectid,
+      taskId,
+      taskName,
+      taskDescription,
+      createdDate,
+      taskDate,
+      markAsDone,
+    ];
+
+    // Execute the query
+    const result = await pool.query(query, values);
+
+    // Respond with success message and created task
+    res.status(201).json({ message: 'Task Created successfully', task: result.rows[0] });
+  } catch (err) {
+    // Log detailed error information
+    console.error('Error creating task:', err);
+
+    // Respond with an error message
+    res.status(500).json({ error: 'Server Error', details: err.message });
+  }
+};
+
 module.exports = {
   getAllProjects,
   getFilteredProjects,
   createProject,
+  createTask
 };
