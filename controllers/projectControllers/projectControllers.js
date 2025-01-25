@@ -105,10 +105,97 @@ const getTasksByProjetId = async (req, res) => {
   }
 };
 
+const deleteTaskById = async (req, res) => {
+  const { projectId,taskId } = req.params;
+
+  try{
+    const query = `DELETE FROM public."projectTimelines" 
+                  WHERE "projectId" = $1 AND "taskId" = $2
+                  RETURNING *;`;
+    const values = [projectId,taskId];
+
+    console.log('Deleting task with projectId:', projectId, 'taskId:', taskId);
+
+    const result = await pool.query(query, values);
+
+    if(result.rowCount > 0){
+      res.status(200).json({message:'Task deleted successfully', task: result.rows[0] });
+    } else{
+      res.status(404).json({ message: 'No task found with the taskId'});
+    }
+  } catch(err){
+    console.error('Error deleting task:',err);
+    res.status(500).json({ error: 'Server Error', details: err.message});
+  }
+};
+
+const editTask = async (req, res) => {
+  const { projectId, taskId } = req.params; // Get the projectId and taskId from the URL parameters
+  const { taskName, taskDescription, taskDate, markAsDone, taskCatagory } = req.body; // Updated task details
+
+  try {
+    // Ensure at least one field is provided to update
+    if (!taskName && !taskDescription && !taskDate && markAsDone == null && !taskCatagory) {
+      return res.status(400).json({ error: 'No fields provided for update' });
+    }
+
+    // Build the dynamic query
+    const updates = [];
+    const values = [];
+
+    if (taskName) {
+      updates.push(`"taskName" = $${updates.length + 1}`);
+      values.push(taskName);
+    }
+    if (taskDescription) {
+      updates.push(`"taskDescription" = $${updates.length + 1}`);
+      values.push(taskDescription);
+    }
+    if (taskDate) {
+      updates.push(`"taskDate" = $${updates.length + 1}`);
+      values.push(taskDate);
+    }
+    if (markAsDone != null) {
+      updates.push(`"markAsDone" = $${updates.length + 1}`);
+      values.push(markAsDone);
+    }
+    if (taskCatagory) {
+      updates.push(`"taskCatagory" = $${updates.length + 1}`);
+      values.push(taskCatagory);
+    }
+
+    // Add projectId and taskId to the query values
+    values.push(projectId, taskId);
+
+    const query = `
+      UPDATE public."projectTimelines"
+      SET ${updates.join(', ')}
+      WHERE "projectId" = $${values.length - 1} AND "taskId" = $${values.length}
+      RETURNING *;
+    `;
+
+    console.log('Updating task with:', values);
+
+    const result = await pool.query(query, values);
+
+    if (result.rowCount > 0) {
+      res.status(200).json({ message: 'Task updated successfully', task: result.rows[0] });
+    } else {
+      res.status(404).json({ message: 'Task not found for the specified projectId and taskId' });
+    }
+  } catch (err) {
+    console.error('Error editing task:', err);
+    res.status(500).json({ error: 'Server Error', details: err.message });
+  }
+};
+
+
 module.exports = {
   getAllProjects,
   getFilteredProjects,
   createProject,
   createTask,
-  getTasksByProjetId
+  getTasksByProjetId,
+  deleteTaskById,
+  editTask,
 };
