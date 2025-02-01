@@ -3,7 +3,7 @@ const { getAllProjects, getFilteredProjects, createProject, createTask, getTasks
 const {getBudgetDetailes, addBudgetDetails, deleteBudgetDetailes } = require('../../controllers/treasureControllers/projectTreasureControllers');
 const { registerUser, loginUser, getAllUsers } = require('../../controllers/authController/authController');
 const verifyToken = require('../../middleware/authmiddleware');
-const { refreshAccessToken } = require('../../controllers/authController/refreshToken');
+const { refreshToken } = require('../../controllers/authController/refreshToken');
 const { getAllUsersNP } = require('../../controllers/userControllers/userControllers');
 
 const router = express.Router();
@@ -27,7 +27,7 @@ router.put('/api/editTask/:projectId/:taskId', editTask);
 // Route for authentication operations
 router.post('/api/register',registerUser);
 router.post('/api/login', loginUser);
-router.post('/refresh',refreshAccessToken);
+router.post('/api/refresh',refreshToken);
 
 //router.get('/api/getAllUsers', getAllUsersNP);
 
