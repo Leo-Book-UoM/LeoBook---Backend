@@ -42,7 +42,7 @@ const registerUser = async (req, res) => {
 
 // Generate access token with userName included
 const generateAccessToken = (userId, email, userName, roleId, roleName) => {
-    return jwt.sign({ userId, email, userName , roleId, roleName}, jwtSecret, { expiresIn: '15m' });
+    return jwt.sign({ userId, email, userName , roleId, roleName}, jwtSecret, { expiresIn: '1h' });
 };
 
 // Generate refresh token
@@ -72,32 +72,76 @@ const loginUser = async (req, res) => {
         const accessToken = generateAccessToken(user.rows[0].userId, user.rows[0].email, user.rows[0].userName, user.rows[0].roleId, roleName);
         const refreshToken = generateRefreshToken(user.rows[0].userId, user.rows[0].email);
 
-        console.log('Generated Tokens:', { accessToken, refreshToken });//debuging
-
-        //set HTTP-only cookies
-        res.cookie('accesToken', accessToken, { 
+        // Set HTTP-only cookies
+        res.cookie('accessToken', accessToken, { 
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 60*60 * 1000,
+            maxAge:  60* 60 * 1000, // 1 hour
         });
 
         res.cookie('refreshToken', refreshToken, { 
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 60*60*24 * 1000,
+            maxAge: 60 * 60 * 24 * 1000, // 7 days
         });
 
-        res.status(200).json({ accessToken, refreshToken, roleName });
+        res.status(200).json({ roleName }); // No data in the response body
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ error: 'Server Error' });
     }
 };
 
+//Authenticated User
+const authUser = async (req, res) => {
+    const token = req.cookies['accessToken']; // Use the correct cookie name
+
+    if (!token) {
+        return res.status(401).send({ message: 'Unauthorized: No token provided' });
+    }
+
+    try {
+        const claims = jwt.verify(token, process.env.JWT_SECRET);
+
+        if (!claims) {
+            return res.status(401).send({ message: 'Unauthorized: Invalid token' });
+        }
+
+        const user = await pool.query('SELECT * FROM public.users WHERE "userId" = $1', [claims.userId]);
+        if (user.rows.length === 0) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        const { password, ...data } = user.rows[0];
+        res.send(data);
+    } catch (err) {
+        console.error(err.message);
+        res.status(401).send({ message: 'Unauthorized: Invalid token' });
+    }
+};
+
+//Logout User
+const logoutUser = ( res) => {
+    res.cookie('accessToken','',{
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0
+    });
+    res.cookie('refreshToken','',{
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 0
+    });
+    res.status(200).json({message: 'Logged out successfully'});
+}
+
 // Fetch all users (protected route)
 const getAllUsers = async (req, res) => {
+    console.log('Cookies:', req.cookies); 
     try {
         if (req.user.roleName !== "President") {
             return res.status(403).json({ message: 'Forbidden: You do not have permission to access this resource.' });
@@ -114,6 +158,8 @@ const getAllUsers = async (req, res) => {
 module.exports = {
     registerUser,
     loginUser,
+    authUser,
+    logoutUser,
     getAllUsers,
     generateAccessToken,
     generateRefreshToken
