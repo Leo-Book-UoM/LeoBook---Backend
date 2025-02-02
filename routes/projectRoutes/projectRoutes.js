@@ -28,7 +28,7 @@ router.put('/api/editTask/:projectId/:taskId', editTask);
 router.post('/api/register',registerUser);
 router.post('/api/login', loginUser);
 router.get('/api/authUser',authUser);
-router.get('/logout',logoutUser);
+router.post('/api/logout',logoutUser);
 router.post('/api/refresh',refreshToken);
 
 //router.get('/api/getAllUsers', getAllUsersNP);

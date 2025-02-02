@@ -123,7 +123,7 @@ const authUser = async (req, res) => {
 };
 
 //Logout User
-const logoutUser = ( res) => {
+const logoutUser = ( req, res) => {
     res.cookie('accessToken','',{
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
