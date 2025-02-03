@@ -34,7 +34,74 @@ const getTasksDetails = async (req, res) => {
         const result = await pool.query(query);
         res.status(200).json(result.rows[0]);
     } catch (err) {
-        console.error('Error fetching task details:', err);
+        res.status(500).json({ error: 'Server Error', details: err.message });
+    }
+};
+
+//get project counts according months
+const getprojectCountsForMonths = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+            TO_CHAR(date, 'Month') AS month_name,  -- Convert month number to month name
+            EXTRACT(MONTH FROM date) AS month_number, -- Extract month number for ordering
+            COUNT(*) AS project_count
+            FROM Public.projects
+            WHERE date IS NOT NULL
+            GROUP BY month_name, month_number
+        `;
+
+        const result = await pool.query(query);
+        const allMonthCounts = result.rows.map(row => ({
+            month_name: row.month_name.trim(), 
+            month_number: row.month_number,
+            project_count: row.project_count
+        }));
+
+        const currentMonth = new Date().getMonth() + 1;
+        const thisMonthCount = allMonthCounts.find(month => 
+            parseInt(month.month_number) === currentMonth
+        );
+
+        res.status(200).json({
+            allMonthCounts,
+            thisMonthCount
+        });
+    } catch (err) {
+        res.status(500).json({ error: "server error", details: err.message });
+    }
+};
+
+//get upcomming project on month
+const getupcommingProjects = async(req, res) => {
+    try{
+        const query = `
+        SELECT 
+        COUNT(*) AS project_count FROM Public.projects
+        WHERE date IS NOT NULL 
+        AND EXTRACT(MONTH FROM date) = EXTRACT(MONTH FROM CURRENT_DATE)
+        AND EXTRACT(YEAR FROM date) = EXTRACT(YEAR FROM CURRENT_DATE);
+        `;
+        const result = await pool.query(query);
+        res.status(200).send(result.rows[0].project_count.toString());
+    } catch (err) {
+        res.status(500).json({ error: 'Server Error', details: err.message });
+    }
+};
+
+//get attribute counts
+const getAttributesCount = async (req, res) => {
+    try {
+        const query = `
+        SELECT 
+            COUNT(*) AS attribute_count, 
+            COUNT(CASE WHEN "status" = true THEN 1 END) AS done_attribute_count
+        FROM public."projectAttributes";
+        `;
+
+        const result = await pool.query(query);
+        res.status(200).json(result.rows[0]); // Send only the first row
+    } catch (err) {
         res.status(500).json({ error: 'Server Error', details: err.message });
     }
 };
@@ -42,5 +109,8 @@ const getTasksDetails = async (req, res) => {
 
 module.exports = {
     getProjectsCount,
-    getTasksDetails
+    getTasksDetails,
+    getprojectCountsForMonths,
+    getupcommingProjects,
+    getAttributesCount
 };
