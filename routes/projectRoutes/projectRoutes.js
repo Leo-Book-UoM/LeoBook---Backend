@@ -5,7 +5,7 @@ const { registerUser, loginUser, getAllUsers, authUser, logoutUser } = require('
 const verifyToken = require('../../middleware/authmiddleware');
 const { refreshToken } = require('../../controllers/authController/refreshToken');
 const { getAllUsersNP } = require('../../controllers/userControllers/userControllers');
-const { getProjectsCount } = require('../../controllers/presidentController/presidentController');
+const { getProjectsCount, getTasksDetails } = require('../../controllers/presidentController/presidentController');
 
 const router = express.Router();
 
@@ -36,6 +36,7 @@ router.post('/api/refresh',refreshToken);
 
 //Route for president operations
 router.get('/api/getProjectsCount/:status', getProjectsCount);
+router.get('/api/getTasksDetails', getTasksDetails);
 
 // Route for user operations
 router.get('/api/getAllUsers',verifyToken, getAllUsers);
