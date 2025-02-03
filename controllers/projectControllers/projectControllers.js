@@ -29,7 +29,7 @@ const createProject = async (req, res) => {
   const { projectid, projectname, date, time, venue, category, image, status, chairman, secretary, treasurer } = req.body;
 
   // Validation for required fields
-  if (!projectid || !projectname || !date || !time || !venue || !category || status == null || !chairman || !secretary || !treasurer) {
+  if (!projectid || !projectname || !date || !time || !venue || !category || status == 1 || !chairman || !secretary || !treasurer) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
