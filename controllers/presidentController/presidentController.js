@@ -43,8 +43,8 @@ const getprojectCountsForMonths = async (req, res) => {
     try {
         const query = `
             SELECT 
-            TO_CHAR(date, 'Month') AS month_name,  -- Convert month number to month name
-            EXTRACT(MONTH FROM date) AS month_number, -- Extract month number for ordering
+            TO_CHAR(date, 'Month') AS month_name,  
+            EXTRACT(MONTH FROM date) AS month_number,
             COUNT(*) AS project_count
             FROM Public.projects
             WHERE date IS NOT NULL
@@ -94,8 +94,8 @@ const getAttributesCount = async (req, res) => {
     try {
         const query = `
         SELECT 
-            COUNT(*) AS attribute_count, 
-            COUNT(CASE WHEN "status" = true THEN 1 END) AS done_attribute_count
+        COUNT(*) AS attribute_count, 
+        COUNT(CASE WHEN "status" = true THEN 1 END) AS done_attribute_count
         FROM public."projectAttributes";
         `;
 
@@ -106,11 +106,42 @@ const getAttributesCount = async (req, res) => {
     }
 };
 
+//Get treasure detailes
+const getTreasureDetailes = async(req, res) => {
+    try{
+        const query =`
+        SELECT 
+        "month", TO_CHAR(month, 'Month') AS month_name,"total_income", "total_expenses","total_current_accets"
+        FROM public.treasuries
+        ORDER BY "month" ASC;
+        `;
+        const result = await pool.query(query);
+        const allMonthTreasures = result.rows.map (row => ({
+            month_name: row.month_name.trim(),
+            total_income: parseFloat(row.total_income.replace(/[$,]/g, '')).toFixed(2),
+            total_expenses: parseFloat(row.total_expenses.replace(/[$,]/g, '')).toFixed(2),
+            total_current_accets: parseFloat(row.total_current_accets.replace(/[$,]/g,'')).toFixed(2)
+        }));
+
+        const currentMonth = new Date().toLocaleDateString('en-us', {month: 'long'});
+        console.log(currentMonth)
+        const currentMonthTreasures = allMonthTreasures.find(month =>
+            (month.month_name) === currentMonth
+        );
+        res.status(200).json({
+            allMonthTreasures,
+            currentMonthTreasures
+        })
+    }catch (err) {
+        res.status(500).json({ error: "server error", details: err.message });
+    };
+ }
 
 module.exports = {
     getProjectsCount,
     getTasksDetails,
     getprojectCountsForMonths,
     getupcommingProjects,
-    getAttributesCount
+    getAttributesCount,
+    getTreasureDetailes
 };
