@@ -1,12 +1,20 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const projectsRoutes = require('./routes/projectRoutes/projectRoutes');
 require('dotenv').config();
 
 const app = express();
 
+app.use(cookieParser());
+
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',  // Your frontend's origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,  // Allow cookies and credentials
+}));
 app.use(express.json());
 
 // Routes

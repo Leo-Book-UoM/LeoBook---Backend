@@ -1,13 +1,47 @@
 const express = require('express');
-const { getAllProjects, getFilteredProjects } = require('../../controllers/projectControllers/projectControllers');
-const {getBudgetDetailes, addBudgetDetails } = require('../../controllers/treasureControllers/projectTreasureControllers');
+const { getAllProjects, getFilteredProjects, createProject, createTask, getTasksByProjetId, deleteTaskById , editTask} = require('../../controllers/projectControllers/projectControllers');
+const {getBudgetDetailes, addBudgetDetails, deleteBudgetDetailes } = require('../../controllers/treasureControllers/projectTreasureControllers');
+const { registerUser, loginUser, getAllUsers, authUser, logoutUser } = require('../../controllers/authController/authController');
+const verifyToken = require('../../middleware/authmiddleware');
+const { refreshToken } = require('../../controllers/authController/refreshToken');
+const { getAllUsersNP } = require('../../controllers/userControllers/userControllers');
+const { getProjectsCount, getTasksDetails, getprojectCountsForMonths, getupcommingProjects, getAttributesCount, getTreasureDetailes } = require('../../controllers/presidentController/presidentController');
 
 const router = express.Router();
 
-// Route to get all projects
+// Routes for project operations
 router.get('/api/projects', getAllProjects);
 router.get('/api/projects/7', getFilteredProjects);
+router.post('/api/addproject',createProject);
+
+// Route for treasure operations
 router.get('/api/treasure', getBudgetDetailes);
 router.post('/api/treasure', addBudgetDetails);
+router.delete('/api/treasure',deleteBudgetDetailes);
 
+// Route for task operations
+router.post('/api/addtask', createTask);
+router.get('/api/gettasks/:projectId', getTasksByProjetId);
+router.delete('/api/deleteTask/:projectId/:taskId',deleteTaskById);
+router.put('/api/editTask/:projectId/:taskId', editTask);
+
+// Route for authentication operations
+router.post('/api/register',registerUser);
+router.post('/api/login', loginUser);
+router.get('/api/authUser',authUser);
+router.post('/api/logout',logoutUser);
+router.post('/api/refresh',refreshToken);
+
+//router.get('/api/getAllUsers', getAllUsersNP);
+
+//Route for president operations
+router.get('/api/getProjectsCount/:status', getProjectsCount);
+router.get('/api/getTasksDetails', getTasksDetails);
+router.get('/api/monthlyProjectCount',getprojectCountsForMonths);
+router.get('/api/upcommingprojects',getupcommingProjects);
+router.get('/api/attributeCounts',getAttributesCount);
+router.get('/api/getTreasureDetailes',getTreasureDetailes);
+
+// Route for user operations
+router.get('/api/getAllUsers',verifyToken, getAllUsers);
 module.exports = router;
