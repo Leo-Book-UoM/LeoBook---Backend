@@ -1,6 +1,6 @@
 const express = require('express');
 const { getAllProjects, getFilteredProjects, createProject, createTask, getTasksByProjetId, deleteTaskById , editTask} = require('../../controllers/projectControllers/projectControllers');
-const {getBudgetDetailes, addBudgetDetails, deleteBudgetDetailes } = require('../../controllers/treasureControllers/projectTreasureControllers');
+const {getProjectBudgetDetailes, addBudgetDetails, deleteBudgetDetailes } = require('../../controllers/treasureControllers/projectTreasureControllers');
 const { registerUser, loginUser, getAllUsers, authUser, logoutUser } = require('../../controllers/authController/authController');
 const verifyToken = require('../../middleware/authmiddleware');
 const { refreshToken } = require('../../controllers/authController/refreshToken');
@@ -14,9 +14,9 @@ router.get('/api/projects', getAllProjects);
 router.get('/api/projects/7', getFilteredProjects);
 router.post('/api/addproject',createProject);
 
-// Route for treasure operations
-router.get('/api/treasure', getBudgetDetailes);
-router.post('/api/treasure', addBudgetDetails);
+// Route for project treasure operations
+router.get('/api/getprojectBudget/:status/:projectId', getProjectBudgetDetailes);
+router.post('/api/addprojectBudget/:status/:projectId', addBudgetDetails);
 router.delete('/api/treasure',deleteBudgetDetailes);
 
 // Route for task operations
