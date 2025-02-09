@@ -1,10 +1,24 @@
 const pool = require('../../config/dbConfig');
 
-// Fetch all projects
+// Fetch all ongoing projects
 const getAllProjects = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM public.projects ORDER BY "projectid"');
-    res.status(200).json(result.rows);
+    const query = `
+      SELECT * 
+      FROM public.projects
+      WHERE date IS NOT NULL 
+      AND  "date" > CURRENT_DATE
+      ORDER BY "date"`;
+
+    const result = await pool.query(query);
+
+    const projectWithImages = result.rows.map(project => {
+      return {
+        ...project,
+        image: project.image ? `http://localhost:5000${project.image}`: null,
+      };
+    });
+    res.status(200).json(projectWithImages);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server Error' });
@@ -24,29 +38,54 @@ const getFilteredProjects = async (req, res) => {
   }
 };
 
-// Create a new project
+// create project
 const createProject = async (req, res) => {
-  const { projectid, projectname, date, time, venue, category, image, status, chairman, secretary, treasurer } = req.body;
-
-  // Validation for required fields
-  if (!projectid || !projectname || !date || !time || !venue || !category || status == 1 || !chairman || !secretary || !treasurer) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
+  const { title, date, time, location, category, status, chairman, secretary, treasurer } = req.body;
+  const image = req.file ? req.file.filename : null;
 
   try {
+    let validatedTime = null;
+
+    if (time) {
+      if (/^\d{2}:\d{2}$/.test(time)) {
+        validatedTime = `${time}:00`;
+      } else {
+        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/;
+        if (!timeRegex.test(time)) {
+          return res.status(400).json({ error: 'Invalid time format. Use HH:MM:SS' });
+        }
+        validatedTime = time;
+      }
+    }
+
+    const imagePath = image ? `/uploads/${image}` : null;
+
     const query = `
-      INSERT INTO public.projects (projectid, projectname, date, time, venue, category, image, status, chairman, secretary, treasurer)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;
+      INSERT INTO public.projects (projectname, date, "time", venue, category, image, status, chairman, secretary, treasure)  
+      VALUES  ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;
     `;
-    const values = [projectid, projectname, date, time, venue, category, image || null, status || 1, chairman, secretary, treasurer];
-    
+
+    const values = [
+      title,
+      date || null,
+      validatedTime || null,
+      location || null,
+      category || null,
+      imagePath || null,
+      status || 1,
+      chairman || null,
+      secretary || null,
+      treasurer || null
+    ];
+
     const result = await pool.query(query, values);
     res.status(201).json({ message: 'Project created successfully', project: result.rows[0] });
   } catch (err) {
-    console.error(err.message);
+    console.error('Database Error:', err.message);
     res.status(500).json({ error: 'Server Error' });
   }
 };
+
 
 //create a new task
 

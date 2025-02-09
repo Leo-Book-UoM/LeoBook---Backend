@@ -1,10 +1,16 @@
 const pool = require('../../config/dbConfig');
 
-const getBudgetDetailes = async (req, res) => {
+//get project income detailes detailes
+const getProjectBudgetDetailes = async (req, res) => {
+    const  { projectId} = req.params;
     try {
-        console.log("Fetching budget details...");
-        const result = await pool.query('SELECT * FROM public."budgetRepotDetailes" ORDER BY "itemId"');
-        console.log("Query successful:", result.rows);
+        const query = `
+            SELECT description , amount
+            FROM public."projectBudget"
+            WHERE "projectId" = $1
+            ORDER BY "budgetId" ASC  `;
+
+        const result = await pool.query(query,[projectId]);
         res.status(200).json(result.rows);
     } catch (err) {
         console.error("Database Error:", err);
@@ -12,23 +18,33 @@ const getBudgetDetailes = async (req, res) => {
     }
 };
 
+//add project budget detailes
+
 const addBudgetDetails = async (req, res) => {
-    const { date, description, quantity, rate } = req.body;
-    const amount = parseFloat(quantity) * parseFloat(rate);
+    const { projectId } = req.params;
+    const { description } = req.body;
 
     try {
-        const result = await pool.query(
-            `INSERT INTO public."budgetRepotDetailes" ("date", "description", "queantity", "price", "amount")
-             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-            [date, description, quantity, rate, amount]
-        );
-        console.log("Budget detail added:", result.rows[0]);
-        res.status(201).json(result.rows[0]);
+        if (!description || !Array.isArray(description)) {
+            return res.status(400).json({ error: "Description must be an array" });
+        }
+
+        const descriptionJSONB = JSON.stringify(description); 
+        const totalAmount = description.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+
+        const query = `
+            INSERT INTO public."projectBudget" ("projectId", "description", "amount") 
+            VALUES ($1, $2::jsonb, $3) RETURNING *`;
+
+        const { rows } = await pool.query(query, [projectId, descriptionJSONB, totalAmount]);
+        res.status(201).json(rows[0]);
+
     } catch (err) {
         console.error("Error adding budget detail:", err);
         res.status(500).json({ error: err.message || 'Failed to add budget detail' });
     }
 };
+
 
 const deleteBudgetDetailes = async (req, res) => {
     const { id } = req.query; 
@@ -53,7 +69,7 @@ const deleteBudgetDetailes = async (req, res) => {
 
 
 module.exports = {
-    getBudgetDetailes,
+    getProjectBudgetDetailes,
     addBudgetDetails,
     deleteBudgetDetailes
 };
