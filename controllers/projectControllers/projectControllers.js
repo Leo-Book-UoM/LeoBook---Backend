@@ -15,10 +15,10 @@ const getAllProjects = async (req, res) => {
     const projectWithImages = result.rows.map(project => {
       return {
         ...project,
-        image: project.image ? `http://localhost:5000/uploads/${project.image}`: null,
+        image: project.image ? `http://localhost:5000${project.image}`: null,
       };
     });
-    res.status(200).json(result.rows);
+    res.status(200).json(projectWithImages);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server Error' });
@@ -40,7 +40,8 @@ const getFilteredProjects = async (req, res) => {
 
 // create project
 const createProject = async (req, res) => {
-  const { title, date, time, location, category, image, status, chairman, secretary, treasurer } = req.body;
+  const { title, date, time, location, category, status, chairman, secretary, treasurer } = req.body;
+  const image = req.file ? req.file.filename : null;
 
   try {
     let validatedTime = null;
@@ -57,7 +58,7 @@ const createProject = async (req, res) => {
       }
     }
 
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    const imagePath = image ? `/uploads/${image}` : null;
 
     const query = `
       INSERT INTO public.projects (projectname, date, "time", venue, category, image, status, chairman, secretary, treasure)  
