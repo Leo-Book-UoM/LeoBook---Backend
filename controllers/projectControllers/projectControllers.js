@@ -1,6 +1,6 @@
 const pool = require('../../config/dbConfig');
 
-// Fetch all projects
+// Fetch all ongoing projects
 const getAllProjects = async (req, res) => {
   try {
     const query = `
@@ -11,6 +11,13 @@ const getAllProjects = async (req, res) => {
       ORDER BY "date"`;
 
     const result = await pool.query(query);
+
+    const projectWithImages = result.rows.map(project => {
+      return {
+        ...project,
+        image: project.image ? `http://localhost:5000/uploads/${project.image}`: null,
+      };
+    });
     res.status(200).json(result.rows);
   } catch (err) {
     console.error(err.message);
@@ -39,7 +46,6 @@ const createProject = async (req, res) => {
     let validatedTime = null;
 
     if (time) {
-      // Convert 'HH:MM' to 'HH:MM:SS' if necessary
       if (/^\d{2}:\d{2}$/.test(time)) {
         validatedTime = `${time}:00`;
       } else {
@@ -51,6 +57,8 @@ const createProject = async (req, res) => {
       }
     }
 
+    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
     const query = `
       INSERT INTO public.projects (projectname, date, "time", venue, category, image, status, chairman, secretary, treasure)  
       VALUES  ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;
@@ -59,10 +67,10 @@ const createProject = async (req, res) => {
     const values = [
       title,
       date || null,
-      validatedTime || null,  // Send formatted time
+      validatedTime || null,
       location || null,
       category || null,
-      image || null,
+      imagePath || null,
       status || 1,
       chairman || null,
       secretary || null,

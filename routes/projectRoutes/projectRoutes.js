@@ -1,8 +1,9 @@
 const express = require('express');
+const verifyToken = require('../../middleware/authmiddleware');
+const upload  = require('../../middleware/upload');
 const { getAllProjects, getFilteredProjects, createProject, createTask, getTasksByProjetId, deleteTaskById , editTask} = require('../../controllers/projectControllers/projectControllers');
 const {getProjectBudgetDetailes, addBudgetDetails, deleteBudgetDetailes } = require('../../controllers/treasureControllers/projectTreasureControllers');
 const { registerUser, loginUser, getAllUsers, authUser, logoutUser } = require('../../controllers/authController/authController');
-const verifyToken = require('../../middleware/authmiddleware');
 const { refreshToken } = require('../../controllers/authController/refreshToken');
 const { getAllUsersNP, getUserName } = require('../../controllers/userControllers/userControllers');
 const { getProjectsCount, getTasksDetails, getprojectCountsForMonths, getupcommingProjects, getAttributesCount, getTreasureDetailes, getUpcommingProjectNames } = require('../../controllers/presidentController/presidentController');
@@ -12,7 +13,8 @@ const router = express.Router();
 // Routes for project operations
 router.get('/api/projects', getAllProjects);
 router.get('/api/projects/7', getFilteredProjects);
-router.post('/api/addproject',createProject);
+//router.post('/api/addproject',createProject);
+router.post('/api/addproject',upload.single("image"), createProject);
 
 // Route for project treasure operations
 router.get('/api/getprojectBudget/:projectId', getProjectBudgetDetailes);
