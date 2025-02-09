@@ -4,8 +4,8 @@ const {getProjectBudgetDetailes, addBudgetDetails, deleteBudgetDetailes } = requ
 const { registerUser, loginUser, getAllUsers, authUser, logoutUser } = require('../../controllers/authController/authController');
 const verifyToken = require('../../middleware/authmiddleware');
 const { refreshToken } = require('../../controllers/authController/refreshToken');
-const { getAllUsersNP } = require('../../controllers/userControllers/userControllers');
-const { getProjectsCount, getTasksDetails, getprojectCountsForMonths, getupcommingProjects, getAttributesCount, getTreasureDetailes } = require('../../controllers/presidentController/presidentController');
+const { getAllUsersNP, getUserName } = require('../../controllers/userControllers/userControllers');
+const { getProjectsCount, getTasksDetails, getprojectCountsForMonths, getupcommingProjects, getAttributesCount, getTreasureDetailes, getUpcommingProjectNames } = require('../../controllers/presidentController/presidentController');
 
 const router = express.Router();
 
@@ -15,8 +15,8 @@ router.get('/api/projects/7', getFilteredProjects);
 router.post('/api/addproject',createProject);
 
 // Route for project treasure operations
-router.get('/api/getprojectBudget/:status/:projectId', getProjectBudgetDetailes);
-router.post('/api/addprojectBudget/:status/:projectId', addBudgetDetails);
+router.get('/api/getprojectBudget/:projectId', getProjectBudgetDetailes);
+router.post('/api/addprojectBudget/:projectId', addBudgetDetails);
 router.delete('/api/treasure',deleteBudgetDetailes);
 
 // Route for task operations
@@ -41,7 +41,9 @@ router.get('/api/monthlyProjectCount',getprojectCountsForMonths);
 router.get('/api/upcommingprojects',getupcommingProjects);
 router.get('/api/attributeCounts',getAttributesCount);
 router.get('/api/getTreasureDetailes',getTreasureDetailes);
+router.get('/api/getUpcommingProjectNames',getUpcommingProjectNames);
 
 // Route for user operations
 router.get('/api/getAllUsers',verifyToken, getAllUsers);
+router.get('/api/getUserNames/:roleName',getUserName);
 module.exports = router;

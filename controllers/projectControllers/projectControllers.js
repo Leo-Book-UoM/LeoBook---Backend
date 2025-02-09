@@ -3,7 +3,14 @@ const pool = require('../../config/dbConfig');
 // Fetch all projects
 const getAllProjects = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM public.projects ORDER BY "projectid"');
+    const query = `
+      SELECT * 
+      FROM public.projects
+      WHERE date IS NOT NULL 
+      AND  "date" > CURRENT_DATE
+      ORDER BY "date"`;
+
+    const result = await pool.query(query);
     res.status(200).json(result.rows);
   } catch (err) {
     console.error(err.message);
@@ -24,29 +31,52 @@ const getFilteredProjects = async (req, res) => {
   }
 };
 
-// Create a new project
+// create project
 const createProject = async (req, res) => {
-  const { projectid, projectname, date, time, venue, category, image, status, chairman, secretary, treasurer } = req.body;
-
-  // Validation for required fields
-  if (!projectid || !projectname || !date || !time || !venue || !category || status == 1 || !chairman || !secretary || !treasurer) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
+  const { title, date, time, location, category, image, status, chairman, secretary, treasurer } = req.body;
 
   try {
+    let validatedTime = null;
+
+    if (time) {
+      // Convert 'HH:MM' to 'HH:MM:SS' if necessary
+      if (/^\d{2}:\d{2}$/.test(time)) {
+        validatedTime = `${time}:00`;
+      } else {
+        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/;
+        if (!timeRegex.test(time)) {
+          return res.status(400).json({ error: 'Invalid time format. Use HH:MM:SS' });
+        }
+        validatedTime = time;
+      }
+    }
+
     const query = `
-      INSERT INTO public.projects (projectid, projectname, date, time, venue, category, image, status, chairman, secretary, treasurer)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;
+      INSERT INTO public.projects (projectname, date, "time", venue, category, image, status, chairman, secretary, treasure)  
+      VALUES  ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;
     `;
-    const values = [projectid, projectname, date, time, venue, category, image || null, status || 1, chairman, secretary, treasurer];
-    
+
+    const values = [
+      title,
+      date || null,
+      validatedTime || null,  // Send formatted time
+      location || null,
+      category || null,
+      image || null,
+      status || 1,
+      chairman || null,
+      secretary || null,
+      treasurer || null
+    ];
+
     const result = await pool.query(query, values);
     res.status(201).json({ message: 'Project created successfully', project: result.rows[0] });
   } catch (err) {
-    console.error(err.message);
+    console.error('Database Error:', err.message);
     res.status(500).json({ error: 'Server Error' });
   }
 };
+
 
 //create a new task
 

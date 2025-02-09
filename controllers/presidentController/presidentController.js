@@ -137,11 +137,25 @@ const getTreasureDetailes = async(req, res) => {
     };
  }
 
+// Get  upcomming projects name
+const getUpcommingProjectNames = async (req, res) => {
+    try {
+        const query = `SELECT "projectname" , "date", "time" FROM public."projects" WHERE "status" = 1;`;
+        const result = await pool.query(query);
+
+        res.status(200).send(result.rows );
+    } catch (err) {
+        console.error('Error fetching project count:', err);
+        res.status(500).json({ error: 'Server Error', details: err.message });
+    }
+};
+
 module.exports = {
     getProjectsCount,
     getTasksDetails,
     getprojectCountsForMonths,
     getupcommingProjects,
     getAttributesCount,
-    getTreasureDetailes
+    getTreasureDetailes,
+    getUpcommingProjectNames
 };
