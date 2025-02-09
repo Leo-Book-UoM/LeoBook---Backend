@@ -2,15 +2,15 @@ const pool = require('../../config/dbConfig');
 
 //get project income detailes detailes
 const getProjectBudgetDetailes = async (req, res) => {
-    const  {status, projectId} = req.params;
+    const  { projectId} = req.params;
     try {
         const query = `
-            SELECT description FROM public."projectBudget"
-            WHERE "projectId" = $1 AND "Status" = $2
+            SELECT description , amount
+            FROM public."projectBudget"
+            WHERE "projectId" = $1
             ORDER BY "budgetId" ASC  `;
 
-        const formattedStatus = status === "1" ? "01" : "00";
-        const result = await pool.query(query,[projectId, formattedStatus]);
+        const result = await pool.query(query,[projectId]);
         res.status(200).json(result.rows);
     } catch (err) {
         console.error("Database Error:", err);
@@ -21,7 +21,7 @@ const getProjectBudgetDetailes = async (req, res) => {
 //add project budget detailes
 
 const addBudgetDetails = async (req, res) => {
-    const { status, projectId } = req.params;
+    const { projectId } = req.params;
     const { description } = req.body;
 
     try {
@@ -29,17 +29,14 @@ const addBudgetDetails = async (req, res) => {
             return res.status(400).json({ error: "Description must be an array" });
         }
 
-        const descriptionJSONB = JSON.stringify(description); // Store as JSONB
+        const descriptionJSONB = JSON.stringify(description); 
         const totalAmount = description.reduce((sum, item) => sum + parseFloat(item.amount), 0);
-        const formattedStatus = status === "1" ? "01" : "00";
 
         const query = `
-            INSERT INTO public."projectBudget" ("projectId", "Status", "description", "amount") 
-            VALUES ($1, $2, $3::jsonb, $4) RETURNING *`;
+            INSERT INTO public."projectBudget" ("projectId", "description", "amount") 
+            VALUES ($1, $2::jsonb, $3) RETURNING *`;
 
-        const { rows } = await pool.query(query, [projectId, formattedStatus, descriptionJSONB, totalAmount]);
-
-        console.log("Budget detail added:", rows[0]);
+        const { rows } = await pool.query(query, [projectId, descriptionJSONB, totalAmount]);
         res.status(201).json(rows[0]);
 
     } catch (err) {
