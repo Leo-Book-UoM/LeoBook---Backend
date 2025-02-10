@@ -124,24 +124,24 @@ const createTask = async (req, res) => {
 //get the task list according the projectId
 const getTasksByProjetId = async (req, res) => {
   const { projectId } =req.params;
-
+  
   try{
     const query = `SELECT * FROM public."projectTimelines" WHERE "projectId" =$1;`;
-
+  
     const values = [projectId];
     console.log('Fetching tasks for projectId', projectId);
-
-    const result = await pool.query(query, values);
-
+  
+      const result = await pool.query(query, values);
+  
     if(result.rows.length > 0) {
-      res.status(200).json({ tasks: result.rows });
-    } else {
+        res.status(200).json({ tasks: result.rows });
+      } else {
       res.status(404).json({ message: 'No tasks found for the specified projectId' });
-    }
+      }
   }catch (err) {
     console.err('Error fetching tasks:', err);
     res.status(500).json({ error: 'Server Error', details: err.message });
-  }
+    }
 };
 
 const deleteTaskById = async (req, res) => {
