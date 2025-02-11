@@ -7,6 +7,8 @@ const { registerUser, loginUser, getAllUsers, authUser, logoutUser } = require('
 const { refreshToken } = require('../../controllers/authController/refreshToken');
 const { getAllUsersNP, getUserName } = require('../../controllers/userControllers/userControllers');
 const { getProjectsCount, getTasksDetails, getprojectCountsForMonths, getupcommingProjects, getAttributesCount, getTreasureDetailes, getUpcommingProjectNames } = require('../../controllers/presidentController/presidentController');
+const { getNotReportedProjectCountToClubSecretary, getReportedProjectCountToClubSecretary, getReportedProjectCountToDistrict, getProjectCountAtPreviousMonth } = require('../../controllers/secretaryControllers/secretaryControllers');
+
 
 const router = express.Router();
 
@@ -45,7 +47,14 @@ router.get('/api/attributeCounts',getAttributesCount);
 router.get('/api/getTreasureDetailes',getTreasureDetailes);
 router.get('/api/getUpcommingProjectNames',getUpcommingProjectNames);
 
+//Route for secretary operations
+router.get('/api/getUnSubmittedReportsCountsToClub', getNotReportedProjectCountToClubSecretary);
+router.get('/api/getSubmittedReportsCountsToClub',getReportedProjectCountToClubSecretary);
+router.get('/api/getSubmittedReportsCountsToDistrict',getReportedProjectCountToDistrict);
+router.get('/api/getProjectCountsAtPreviousMonth',getProjectCountAtPreviousMonth);
+
 // Route for user operations
 router.get('/api/getAllUsers',verifyToken, getAllUsers);
 router.get('/api/getUserNames/:roleName',getUserName);
+
 module.exports = router;
