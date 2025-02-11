@@ -4,7 +4,7 @@ const pool = require('../../config/dbConfig');
 const getAllProjects = async (req, res) => {
   try {
     const query = `
-      SELECT * 
+      SELECT "projectId" , "projectname", "date", "time" , "venue", "image" 
       FROM public.projects
       WHERE date IS NOT NULL 
       AND  "date" > CURRENT_DATE
@@ -90,20 +90,18 @@ const createProject = async (req, res) => {
 //create a new task
 
 const createTask = async (req, res) => {
-  const { projectid, taskId, taskName, taskDescription, taskDate, markAsDone, taskCatagory } = req.body;
-
+  const { projectId, taskName, taskDescription, taskDate, markAsDone, taskCatagory } = req.body;
   const createdDate = new Date();
 
   try {
     const query = `
     INSERT INTO public."projectTimelines" 
-    ("projectId", "taskId", "taskName", "taskDescription", "createdDate", "taskDate", "markAsDone", "taskCatagory") 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+    ("projectId", "taskName", "taskDescription", "createdDate", "taskDate", "markAsDone", "taskCatagory") 
+    VALUES ($1, $2, $3, $4, $5, $6, $7) 
     RETURNING *;
   `;
     const values = [
-      projectid,
-      taskId,
+      projectId,
       taskName,
       taskDescription,
       createdDate,
@@ -111,7 +109,6 @@ const createTask = async (req, res) => {
       markAsDone,
       taskCatagory, 
     ];
-    console.log('Inserting values:', values); 
     const result = await pool.query(query, values);
 
     res.status(201).json({ message: 'Task Created successfully', task: result.rows[0] });
