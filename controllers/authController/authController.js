@@ -96,7 +96,7 @@ const loginUser = async (req, res) => {
 
 //Authenticated User
 const authUser = async (req, res) => {
-    const token = req.cookies['accessToken']; // Use the correct cookie name
+    const token = req.cookies['accessToken'];
 
     if (!token) {
         return res.status(401).send({ message: 'Unauthorized: No token provided' });
@@ -109,13 +109,17 @@ const authUser = async (req, res) => {
             return res.status(401).send({ message: 'Unauthorized: Invalid token' });
         }
 
-        const user = await pool.query('SELECT * FROM public.users WHERE "userId" = $1', [claims.userId]);
+        const user = await pool.query(`SELECT u."userName", r."roleName"
+                                        FROM public.users u
+                                        Join public.roles r
+                                        ON u."roleId" = r."roleId"
+                                        WHERE u."userId" =$1`, 
+                                        [claims.userId]);
         if (user.rows.length === 0) {
             return res.status(404).send({ message: 'User not found' });
         }
 
-        const { password, ...data } = user.rows[0];
-        res.send(data);
+        res.send(user.rows[0]);
     } catch (err) {
         console.error(err.message);
         res.status(401).send({ message: 'Unauthorized: Invalid token' });
