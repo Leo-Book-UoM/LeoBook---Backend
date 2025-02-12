@@ -42,12 +42,14 @@ const getprojectCountsForMonths = async (req, res) => {
     try {
         const query = `
             SELECT 
-            TO_CHAR(date, 'Month') AS month_name,  
-            EXTRACT(MONTH FROM date) AS month_number,
-            COUNT(*) AS project_count
+                TO_CHAR(date, 'Month') AS month_name,  
+                EXTRACT(YEAR FROM date) AS year,
+                EXTRACT(MONTH FROM date) AS month_number,
+                COUNT(*) AS project_count
             FROM Public.projects
             WHERE date IS NOT NULL
-            GROUP BY month_name, month_number
+            GROUP BY EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date), TO_CHAR(date, 'Month')
+            ORDER BY year DESC, month_number;
         `;
 
         const result = await pool.query(query);
