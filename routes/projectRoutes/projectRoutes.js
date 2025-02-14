@@ -52,7 +52,7 @@ router.get('/api/getProjectReportingStatus',getProjectReportingStatus);
 router.get('/api/getLastMontProjects',getPreviousMonthProjects);
 
 //Routes for meeting operations
-router.post('/api/createGeneralMeeting',createGeneralMeeting);
+router.post('/api/createGeneralMeeting',upload.single("image"),createGeneralMeeting);
 router.get('/api/getAllGeneralMeetings',getAllGeneralMeetings);
 
 // Route for user operations
