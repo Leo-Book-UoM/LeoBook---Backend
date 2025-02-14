@@ -7,8 +7,8 @@ const { registerUser, loginUser, getAllUsers, authUser, logoutUser } = require('
 const { refreshToken } = require('../../controllers/authController/refreshToken');
 const { getAllUsersNP, getUserName } = require('../../controllers/userControllers/userControllers');
 const { getProjectsCount, getTasksDetails, getprojectCountsForMonths, getupcommingProjects, getAttributesCount, getTreasureDetailes, getUpcommingProjectNames } = require('../../controllers/presidentController/presidentController');
-//const { getNotReportedProjectCountToClubSecretary, getReportedProjectCountToClubSecretary, getReportedProjectCountToDistrict, getProjectCountAtPreviousMonth } = require('../../controllers/secretaryControllers/secretaryControllers');
-const { getProjectReportingStatus} = require('../../controllers/secretaryControllers/secretaryControllers');
+const { getProjectReportingStatus, getPreviousMonthProjects} = require('../../controllers/secretaryControllers/secretaryControllers');
+const { createGeneralMeeting, getAllGeneralMeetings } = require('../../controllers/meetingController/meetingController');
 
 const router = express.Router();
 
@@ -48,11 +48,12 @@ router.get('/api/getTreasureDetailes',getTreasureDetailes);
 router.get('/api/getUpcommingProjectNames',getUpcommingProjectNames);
 
 //Route for secretary operations
-// router.get('/api/getUnSubmittedReportsCountsToClub', getNotReportedProjectCountToClubSecretary);
-// router.get('/api/getSubmittedReportsCountsToClub',getReportedProjectCountToClubSecretary);
-// router.get('/api/getSubmittedReportsCountsToDistrict',getReportedProjectCountToDistrict);
-// router.get('/api/getProjectCountsAtPreviousMonth',getProjectCountAtPreviousMonth);
 router.get('/api/getProjectReportingStatus',getProjectReportingStatus);
+router.get('/api/getLastMontProjects',getPreviousMonthProjects);
+
+//Routes for meeting operations
+router.post('/api/createGeneralMeeting',createGeneralMeeting);
+router.get('/api/getAllGeneralMeetings',getAllGeneralMeetings);
 
 // Route for user operations
 router.get('/api/getAllUsers',verifyToken, getAllUsers);
