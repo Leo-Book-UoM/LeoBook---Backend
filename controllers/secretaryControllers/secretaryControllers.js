@@ -37,13 +37,38 @@ const getProjectReportingStatus = async (req, res) => {
     }
 };
 
-// module.exports = { getProjectCounts };
+const getPreviousMonthProjects = async (req, res) => {
+    try{
+        const query = `
+        SELECT * 
+        FROM public.projects
+        WHERE(
+        (EXTRACT(DAY FROM CURRENT_DATE) <= 15
+        AND "date" >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+        AND "date" < DATE_TRUNC('month', CURRENT_DATE))
 
+        OR
+
+        (EXTRACT(DAY FROM CURRENT_DATE) > 15
+        AND "date" >= DATE_TRUNC('month', CURRENT_DATE)
+        AND "date" < DATE_TRUNC('month', CURRENT_DATE + INTERVAL '1 month'))
+        );`
+
+        const result = await pool.query(query);
+        const projectWithImages = result.rows.map(project => {
+            return {
+              ...project,
+              image: project.image ? `http://localhost:5000${project.image}`: null,
+            };
+          });
+          res.status(200).json(projectWithImages);
+        } catch (err) {
+          console.error(err.message);
+          res.status(500).json({ error: 'Server Error' });
+        }
+};
 
 module.exports={
-    // getNotReportedProjectCountToClubSecretary,
-    // getReportedProjectCountToClubSecretary,
-    // getReportedProjectCountToDistrict,
-    // getProjectCountAtPreviousMonth
-    getProjectReportingStatus
+    getProjectReportingStatus,
+    getPreviousMonthProjects
 }
