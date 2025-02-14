@@ -37,6 +37,26 @@ const getProjectReportingStatus = async (req, res) => {
     }
 };
 
+//Fetch General meeting participents counts
+const getGMParticipents = async(req, res) => {
+    try{
+      const query = `
+      SELECT 
+         TO_CHAR(date, 'Month') AS month_name,
+         array_length(participants, 1) AS participant_count
+      FROM public."generalMeetings"
+      WHERE "date" IS NOT NULL
+        AND "date" >= date_trunc('month', CURRENT_DATE) - INTERVAL '10 months'
+      ORDER BY "date";
+      `
+      const result = await pool.query(query);
+      res.status(200).json(result.rows);
+    }catch(error){
+        console.error("Error fetching GM participents counts:", error);
+        res.status(500).json({ error: 'Server Error', details: error.message });
+    }
+  }
+
 const getPreviousMonthProjects = async (req, res) => {
     try{
         const query = `
@@ -70,5 +90,6 @@ const getPreviousMonthProjects = async (req, res) => {
 
 module.exports={
     getProjectReportingStatus,
-    getPreviousMonthProjects
+    getPreviousMonthProjects,
+    getGMParticipents
 }

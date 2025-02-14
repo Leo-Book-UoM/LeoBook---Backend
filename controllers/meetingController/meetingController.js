@@ -1,6 +1,5 @@
 const pool = require('../../config/dbConfig');
 
-//create General meeting
 // Create General Meeting
 const createGeneralMeeting = async (req, res) => {
   try {
@@ -41,7 +40,6 @@ const createGeneralMeeting = async (req, res) => {
       res.status(500).json({ error: "Server Error" });
   }
 };
-
 
 // Fetch  past 11 month's general meetings
 const getAllGeneralMeetings = async (req, res) => {
