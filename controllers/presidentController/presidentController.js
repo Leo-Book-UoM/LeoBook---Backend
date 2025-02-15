@@ -96,12 +96,12 @@ const getAttributesCount = async (req, res) => {
         const query = `
         SELECT 
         COUNT(*) AS attribute_count, 
-        COUNT(CASE WHEN "status" = true THEN 1 END) AS done_attribute_count
+        COUNT(CASE WHEN "projectId" IS NOT NULL THEN 1 END) AS done_attribute_count
         FROM public."projectAttributes";
         `;
 
         const result = await pool.query(query);
-        res.status(200).json(result.rows[0]); // Send only the first row
+        res.status(200).json(result.rows[0]); 
     } catch (err) {
         res.status(500).json({ error: 'Server Error', details: err.message });
     }
