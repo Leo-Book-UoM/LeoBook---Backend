@@ -56,7 +56,7 @@ router.get('/api/getGMParticipentsCount',getGMParticipents);
 router.post('/api/createGeneralMeeting',upload.single("image"),createGeneralMeeting);
 router.get('/api/getAllGeneralMeetings',getAllGeneralMeetings);
 router.get('/api/getGMAttendance/:meetingId',getaGMAttendance);
-router.patch('/api/markAttendance/:meetingId',markAttendance);
+router.patch('/api/markAttendance/:generalMeetingId',markAttendance);
 
 // Route for user operations
 router.get('/api/getAllUsers',verifyToken, getAllUsers);

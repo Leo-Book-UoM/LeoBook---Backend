@@ -110,7 +110,7 @@ const getaGMAttendance = async (req, res) => {
 
 //mark the attendance
 const markAttendance = async (req, res) => {
-  const { meetingId } = req.params;
+  const { generalMeetingId } = req.params;
   const { participantsArr } = req.body;
 
   if (!Array.isArray(participantsArr) || participantsArr.length === 0) {
@@ -124,7 +124,7 @@ const markAttendance = async (req, res) => {
       WHERE "meetingId" = $1
       RETURNING participants;
     `;
-    const values = [meetingId, participantsArr];
+    const values = [generalMeetingId, participantsArr];
     const result = await pool.query(query, values);
     res.status(200).json({
       message: "Attendance replaced successfully",
