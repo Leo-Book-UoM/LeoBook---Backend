@@ -2,13 +2,17 @@ const pool = require('../../config/dbConfig');
 
 // Get project count by status
 const getProjectsCount = async (req, res) => {
-    const { status } = req.params; // Extract status from URL parameters
+    const { status } = req.params;
+
+    if(!status) {
+        return res.status(400).json({ error: "Status parameter is required"});
+    }
 
     try {
         const query = `SELECT COUNT(*) AS total FROM public."projects" WHERE "status" = $1;`;
         const result = await pool.query(query, [status]);
 
-        res.status(200).send(result.rows[0].total.toString() );
+            res.status(200).send(result.rows[0].total.toString() );
     } catch (err) {
         console.error('Error fetching project count:', err);
         res.status(500).json({ error: 'Server Error', details: err.message });
@@ -19,20 +23,15 @@ const getProjectsCount = async (req, res) => {
 const getTasksDetails = async (req, res) => {
     try {
         const query = `
-        SELECT 
-            COUNT(CASE WHEN pt."markAsDone" = B'0' THEN 1 END) AS pendingTasks,
-            COUNT(pt."taskId") AS totalTasks,
-            COUNT(CASE WHEN pt."taskDate" < CURRENT_DATE AND pt."markAsDone" = B'0' THEN 1 END) AS timeoutTasks
-        FROM 
-            public."projectTimelines" pt 
-        LEFT JOIN 
-            public."projects" p ON p.projectid = pt."projectId"
-        WHERE 
-            p.status = 1;
-        `;
+       SELECT 
+       COUNT(CASE WHEN pt."markAsDone" = B'0' THEN 1 END) AS "pendingTasks",
+       COUNT(CASE WHEN  pt."markAsDone" = B'1' THEN 1 END) AS "doneTasks",
+       COUNT(CASE WHEN pt."taskDate" < CURRENT_DATE AND pt."markAsDone" = B'0' THEN 1 END) AS "timeoutTasks"
+       FROM public."projectTimelines" pt
+       WHERE pt."projectId" IN (SELECT p."projectId" FROM public."projects" p WHERE p."status" = 1);`;
 
         const result = await pool.query(query);
-        res.status(200).json(result.rows[0]);
+        res.status(200).json([result.rows[0]]);
     } catch (err) {
         res.status(500).json({ error: 'Server Error', details: err.message });
     }
@@ -43,12 +42,14 @@ const getprojectCountsForMonths = async (req, res) => {
     try {
         const query = `
             SELECT 
-            TO_CHAR(date, 'Month') AS month_name,  
-            EXTRACT(MONTH FROM date) AS month_number,
-            COUNT(*) AS project_count
+                TO_CHAR(date, 'Month') AS month_name,  
+                EXTRACT(YEAR FROM date) AS year,
+                EXTRACT(MONTH FROM date) AS month_number,
+                COUNT(*) AS project_count
             FROM Public.projects
             WHERE date IS NOT NULL
-            GROUP BY month_name, month_number
+            GROUP BY EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date), TO_CHAR(date, 'Month')
+            ORDER BY year DESC, month_number;
         `;
 
         const result = await pool.query(query);

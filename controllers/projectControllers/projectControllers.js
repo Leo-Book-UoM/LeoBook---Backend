@@ -4,7 +4,7 @@ const pool = require('../../config/dbConfig');
 const getAllProjects = async (req, res) => {
   try {
     const query = `
-      SELECT * 
+      SELECT "projectId" , "projectname", "date", "time" , "venue", "image" 
       FROM public.projects
       WHERE date IS NOT NULL 
       AND  "date" > CURRENT_DATE
@@ -90,20 +90,18 @@ const createProject = async (req, res) => {
 //create a new task
 
 const createTask = async (req, res) => {
-  const { projectid, taskId, taskName, taskDescription, taskDate, markAsDone, taskCatagory } = req.body;
-
+  const { projectId, taskName, taskDescription, taskDate, markAsDone, taskCatagory } = req.body;
   const createdDate = new Date();
 
   try {
     const query = `
     INSERT INTO public."projectTimelines" 
-    ("projectId", "taskId", "taskName", "taskDescription", "createdDate", "taskDate", "markAsDone", "taskCatagory") 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+    ("projectId", "taskName", "taskDescription", "createdDate", "taskDate", "markAsDone", "taskCatagory") 
+    VALUES ($1, $2, $3, $4, $5, $6, $7) 
     RETURNING *;
   `;
     const values = [
-      projectid,
-      taskId,
+      projectId,
       taskName,
       taskDescription,
       createdDate,
@@ -111,7 +109,6 @@ const createTask = async (req, res) => {
       markAsDone,
       taskCatagory, 
     ];
-    console.log('Inserting values:', values); 
     const result = await pool.query(query, values);
 
     res.status(201).json({ message: 'Task Created successfully', task: result.rows[0] });
@@ -123,24 +120,29 @@ const createTask = async (req, res) => {
 
 //get the task list according the projectId
 const getTasksByProjetId = async (req, res) => {
-  const { projectId } =req.params;
+  try {
+    const { projectId } = req.params;
+    
+    if (!projectId) {
+      console.error('Error: projectId is undefined');
+      return res.status(400).json({ error: 'Invalid request: projectId is required' });
+    }
 
-  try{
-    const query = `SELECT * FROM public."projectTimelines" WHERE "projectId" =$1;`;
+    console.log('Fetching tasks for projectId:', projectId);
 
+    const query = `SELECT * FROM public."projectTimelines" WHERE "projectId" = $1;`;
     const values = [projectId];
-    console.log('Fetching tasks for projectId', projectId);
 
     const result = await pool.query(query, values);
 
-    if(result.rows.length > 0) {
-      res.status(200).json({ tasks: result.rows });
+    if (result.rows.length > 0) {
+      return res.status(200).json({ tasks: result.rows });
     } else {
-      res.status(404).json({ message: 'No tasks found for the specified projectId' });
+      return res.status(404).json({ message: 'No tasks found for the specified projectId' });
     }
-  }catch (err) {
-    console.err('Error fetching tasks:', err);
-    res.status(500).json({ error: 'Server Error', details: err.message });
+  } catch (err) {
+    console.error('Error fetching tasks:', err);
+    return res.status(500).json({ error: 'Server Error', details: err.message });
   }
 };
 
