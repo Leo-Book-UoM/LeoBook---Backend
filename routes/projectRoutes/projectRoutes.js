@@ -7,7 +7,7 @@ const { registerUser, loginUser, getAllUsers, authUser, logoutUser } = require('
 const { refreshToken } = require('../../controllers/authController/refreshToken');
 const { getAllUsersNP, getUserName } = require('../../controllers/userControllers/userControllers');
 const { getProjectsCount, getTasksDetails, getprojectCountsForMonths, getupcommingProjects, getAttributesCount, getTreasureDetailes, getUpcommingProjectNames } = require('../../controllers/presidentController/presidentController');
-const { getProjectReportingStatus, getPreviousMonthProjects, getGMParticipents} = require('../../controllers/secretaryControllers/secretaryControllers');
+const { getProjectReportingStatus, getPreviousMonthProjects, getGMParticipents, getPreviousMonthProjectNames, getAttributes, markAttribute} = require('../../controllers/secretaryControllers/secretaryControllers');
 const { createGeneralMeeting, getAllGeneralMeetings, getaGMAttendance, markAttendance } = require('../../controllers/meetingController/meetingController');
 
 const router = express.Router();
@@ -51,6 +51,9 @@ router.get('/api/getUpcommingProjectNames',getUpcommingProjectNames);
 router.get('/api/getProjectReportingStatus',getProjectReportingStatus);
 router.get('/api/getLastMontProjects',getPreviousMonthProjects);
 router.get('/api/getGMParticipentsCount',getGMParticipents);
+router.get('/api/getPreviousMonthProjectNames',getPreviousMonthProjectNames);
+router.get('/api/getAttributes',getAttributes);
+router.patch('/api/markAttribute/:attributeId',markAttribute);
 
 //Routes for meeting operations
 router.post('/api/createGeneralMeeting',upload.single("image"),createGeneralMeeting);
