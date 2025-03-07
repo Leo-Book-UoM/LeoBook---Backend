@@ -81,7 +81,65 @@ const getAllGeneralMeetings = async (req, res) => {
   }
 };
 
+//get the attendance of officers
+const getaGMAttendance = async (req, res) => {
+  const {meetingId} = req.params
+  try{ 
+  const query = `
+  SELECT 
+    o."officerId", 
+    o."officerName", 
+    o."designationName", 
+    CASE 
+        WHEN gm."meetingId" IS NOT NULL THEN TRUE 
+        ELSE FALSE 
+    END AS "participation"
+    FROM public.officers o
+    LEFT JOIN public."generalMeetings" gm 
+    ON o."officerId" = ANY(gm.participants)
+    AND gm."meetingId" = $1; `;
+
+  const values = [meetingId];
+  const result = await pool.query(query,values);
+  res.status(200).json(result.rows);
+}catch(error){
+  console.error("Error fetching GM Attendance:", error);
+  res.status(500).json({ error: 'Server Error', details: error.message });
+}
+}
+
+//mark the attendance
+const markAttendance = async (req, res) => {
+  const { generalMeetingId } = req.params;
+  const { participantsArr } = req.body;
+
+  if (!Array.isArray(participantsArr) || participantsArr.length === 0) {
+    return res.status(400).json({ error: "No participants to add" });
+  }
+
+  try {
+    const query = `
+      UPDATE public."generalMeetings"
+      SET participants = $2
+      WHERE "meetingId" = $1
+      RETURNING participants;
+    `;
+    const values = [generalMeetingId, participantsArr];
+    const result = await pool.query(query, values);
+    res.status(200).json({
+      message: "Attendance replaced successfully",
+      updatedParticipants: result.rows[0].participants
+    });
+  } catch (err) {
+    console.error("Database Error:", err.message);
+    res.status(500).json({ error: "Server Error" });
+  }
+};
+
+
 module.exports = { 
   createGeneralMeeting,
-  getAllGeneralMeetings
+  getAllGeneralMeetings,
+  getaGMAttendance,
+  markAttendance
  };

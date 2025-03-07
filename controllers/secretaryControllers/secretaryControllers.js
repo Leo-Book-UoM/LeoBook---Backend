@@ -88,8 +88,79 @@ const getPreviousMonthProjects = async (req, res) => {
         }
 };
 
+const getPreviousMonthProjectNames = async (req, res) => {
+  try{
+      const query = `
+      SELECT "projectId", "projectname" 
+      FROM public.projects
+      WHERE(
+      (EXTRACT(DAY FROM CURRENT_DATE) <= 15
+      AND "date" >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+      AND "date" < DATE_TRUNC('month', CURRENT_DATE))
+
+      OR
+
+      (EXTRACT(DAY FROM CURRENT_DATE) > 15
+      AND "date" >= DATE_TRUNC('month', CURRENT_DATE)
+      AND "date" < DATE_TRUNC('month', CURRENT_DATE + INTERVAL '1 month'))
+      );`
+
+      const result = await pool.query(query);
+        res.status(200).json(result.rows);
+      } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Server Error' });
+      }
+};
+
+const getAttributes = async (req, res) => {
+  try{
+      const query = `
+      SELECT "attributeName" , "projectId"
+      FROM public."projectAttributes"
+      ORDER BY "attributeId" ASC ;`
+
+      const result = await pool.query(query);
+        res.status(200).json(result.rows);
+      } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Server Error' });
+      }
+};
+
+//set the project attributes
+const markAttribute = async (req, res) => {
+  const { attributeId } = req.params;
+  const { projectArr } = req.body;
+
+  if (!Array.isArray(projectArr) || projectArr.length === 0) {
+    return res.status(400).json({ error: "No attribute to add" });
+  }
+
+  try {
+    const query = `
+      UPDATE public."projectAttributes"
+      SET "projectId" = $1
+      WHERE "attributeId" = $2
+      RETURNING "projectId";
+    `;
+    const values = [projectArr, attributeId];
+    const result = await pool.query(query, values);
+    res.status(200).json({
+      message: "Attribute created successfully",
+      updatedProjects: result.rows[0].projects
+    });
+  } catch (err) {
+    console.error("Database Error:", err.message);
+    res.status(500).json({ error: "Server Error" });
+  }
+};
+
 module.exports={
     getProjectReportingStatus,
     getPreviousMonthProjects,
-    getGMParticipents
+    getGMParticipents,
+    getPreviousMonthProjectNames,
+    getAttributes,
+    markAttribute
 }
