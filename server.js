@@ -11,7 +11,7 @@ app.use(cookieParser());
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', 
+  origin: 'https://frontend-seven-eta-64.vercel.app', 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
