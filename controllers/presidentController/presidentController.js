@@ -94,10 +94,13 @@ const getupcommingProjects = async(req, res) => {
 const getAttributesCount = async (req, res) => {
     try {
         const query = `
-        SELECT 
-        COUNT(*) AS attribute_count, 
-        COUNT(CASE WHEN "projectId" IS NOT NULL THEN 1 END) AS done_attribute_count
-        FROM public."projectAttributes";
+        SELECT COUNT(*) AS attribute_count,
+	    COUNT(paa."projectId") AS done_attribute_count
+        FROM public."projectAttributes" pat
+        LEFT JOIN  (
+			SELECT  DISTINCT "projectId", unnest ("attributeId") AS "attributeId"
+			FROM public."projectsAssignToAttributes") paa
+        ON pat."attributeId" =paa."attributeId";
         `;
 
         const result = await pool.query(query);
