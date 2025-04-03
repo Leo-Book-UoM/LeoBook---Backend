@@ -88,11 +88,14 @@ const getPreviousMonthProjects = async (req, res) => {
         }
 };
 
+//previousmonth and non assigned projects
 const getPreviousMonthProjectNames = async (req, res) => {
   try{
       const query = `
-      SELECT "projectId", "projectname" 
-      FROM public.projects
+      SELECT p."projectId", p."projectname"
+      FROM public.projects p
+	  LEFT JOIN public."projectsAssignToAttributes" pa
+	  ON p."projectId" = pa."projectId"
       WHERE(
       (EXTRACT(DAY FROM CURRENT_DATE) <= 15
       AND "date" >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
@@ -103,7 +106,8 @@ const getPreviousMonthProjectNames = async (req, res) => {
       (EXTRACT(DAY FROM CURRENT_DATE) > 15
       AND "date" >= DATE_TRUNC('month', CURRENT_DATE)
       AND "date" < DATE_TRUNC('month', CURRENT_DATE + INTERVAL '1 month'))
-      );`
+      )
+	  AND pa."projectId" IS NULL;`
 
       const result = await pool.query(query);
         res.status(200).json(result.rows);
@@ -113,10 +117,39 @@ const getPreviousMonthProjectNames = async (req, res) => {
       }
 };
 
+
+//previousmonth and assigned projects
+const getPreviousMonthAssignedProjectNames = async (req, res) => {
+  try{
+      const query = `
+      SELECT p."projectId", p."projectname"
+      FROM public.projects p
+	  LEFT JOIN public."projectsAssignToAttributes" pa
+	  ON p."projectId" = pa."projectId"
+      WHERE(
+      (EXTRACT(DAY FROM CURRENT_DATE) <= 15
+      AND "date" >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+      AND "date" < DATE_TRUNC('month', CURRENT_DATE))
+
+      OR
+
+      (EXTRACT(DAY FROM CURRENT_DATE) > 15
+      AND "date" >= DATE_TRUNC('month', CURRENT_DATE)
+      AND "date" < DATE_TRUNC('month', CURRENT_DATE + INTERVAL '1 month'))
+      )
+	  AND pa."projectId" IS NULL;`
+
+      const result = await pool.query(query);
+        res.status(200).json(result.rows);
+      } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Server Error' });
+      }
+};
 const getAttributes = async (req, res) => {
   try{
       const query = `
-      SELECT "attributeName" , "projectId"
+      SELECT "attributeName" , "attributeId"
       FROM public."projectAttributes"
       ORDER BY "attributeId" ASC ;`
 
@@ -128,33 +161,145 @@ const getAttributes = async (req, res) => {
       }
 };
 
-//set the project attributes
 const markAttribute = async (req, res) => {
-  const { attributeId } = req.params;
-  const { projectArr } = req.body;
+  const { projectId, attributeIds } = req.body;
 
-  if (!Array.isArray(projectArr) || projectArr.length === 0) {
-    return res.status(400).json({ error: "No attribute to add" });
+  if (!projectId || !Array.isArray(attributeIds) || attributeIds.length === 0) {
+    return res.status(400).json({ error: "Invalid projectId or attributes" });
   }
 
   try {
     const query = `
-      UPDATE public."projectAttributes"
-      SET "projectId" = $1
-      WHERE "attributeId" = $2
-      RETURNING "projectId";
+      INSERT INTO public."projectsAssignToAttributes" ("projectId", "attributeId")
+      VALUES ($1, $2)
+      RETURNING *;
     `;
-    const values = [projectArr, attributeId];
+
+    const values = [projectId, attributeIds];
     const result = await pool.query(query, values);
-    res.status(200).json({
-      message: "Attribute created successfully",
-      updatedProjects: result.rows[0].projects
+
+    if (!result.rows || result.rows.length === 0) {
+      return res.status(201).json({
+        message: "Attributes assigned successfully, but no data returned."
+      });
+    }
+
+    res.status(201).json({
+      message: "Attributes assigned successfully",
+      assignedAttributes: result.rows[0] 
     });
+
   } catch (err) {
     console.error("Database Error:", err.message);
     res.status(500).json({ error: "Server Error" });
   }
 };
+
+//get marked attributes
+const getMarkedAttributes = async (req, res) => {
+  try{
+      const query = `
+      SELECT 
+        p."projectId", 
+        p."projectname", 
+        STRING_AGG(DISTINCT (a."attributeId")::TEXT, ', ') AS "attributeIds",  
+        STRING_AGG(DISTINCT (a."attributeName"), ', ') AS "attributeNames"
+      FROM public.projects p
+      LEFT JOIN public."projectsAssignToAttributes" pa
+      ON p."projectId" = pa."projectId"
+      LEFT JOIN public."projectAttributes" a 
+      ON a."attributeId" = ANY(pa."attributeId")
+      WHERE 
+    (
+    (EXTRACT(DAY FROM CURRENT_DATE) <= 15
+     AND p."date" >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+     AND p."date" < DATE_TRUNC('month', CURRENT_DATE))
+
+    OR
+
+    (EXTRACT(DAY FROM CURRENT_DATE) > 15
+     AND p."date" >= DATE_TRUNC('month', CURRENT_DATE)
+     AND p."date" < DATE_TRUNC('month', CURRENT_DATE + INTERVAL '1 month'))
+    )
+    AND pa."projectId" IS NOT NULL
+    GROUP BY p."projectId", p."projectname";`
+
+      const result = await pool.query(query);
+        res.status(200).json(result.rows);
+      } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Server Error' });
+      }
+};
+
+//delete assigned attributes
+const deleteProjectsAssignToAttributes = async (req, res) => {
+  const { projectId } = req.body;
+
+  if(!projectId ) {
+    return res.status(400).json({ error: "Invalid projetId"});
+  }
+  try {
+    const query = `
+    DELETE FROM public."projectsAssignToAttributes"
+    WHERE "projectId" = $1 ;
+    `;
+
+    const values = [projectId];
+    const result = await pool.query(query, values);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Record not found"});
+    }
+    res.status(200).json({ message: "Record deleted successfully" });
+
+  } catch (err) {
+    console.error("Database error:", err.message);
+    res.status(500).json({ error: "Server error"});
+  }
+};
+
+//create district event
+const createDiatrictEvent = async (req, res) => {
+  try {
+      const { title, date, time, location } = req.body;
+      const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+      let validatedTime = null;
+      if (time) {
+          if (/^\d{2}:\d{2}$/.test(time)) {
+              validatedTime = `${time}:00`;
+          } else {
+              const timeRegex = /^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/;
+              if (!timeRegex.test(time)) {
+                  return res.status(400).json({ error: 'Invalid time format. Use HH:MM or HH:MM:SS' });
+              }
+              validatedTime = time;
+          }
+      }
+
+      const query = `
+          INSERT INTO public."districtEvents" ("eventName", date, "time", location, image)
+          VALUES ($1, $2, $3, $4, $5) RETURNING *;
+      `;
+
+      const values = [
+          title || null,
+          date || null,
+          validatedTime || null, 
+          location || null,
+          imagePath || null
+      ];
+
+      const result = await pool.query(query, values);
+      res.status(201).json({ message: "Event created successfully", meeting: result.rows[0] });
+
+  } catch (err) {
+      console.error("Database Error:", err.message);
+      res.status(500).json({ error: "Server Error" });
+  }
+};
+
 
 module.exports={
     getProjectReportingStatus,
@@ -162,5 +307,9 @@ module.exports={
     getGMParticipents,
     getPreviousMonthProjectNames,
     getAttributes,
-    markAttribute
+    markAttribute,
+    getPreviousMonthAssignedProjectNames,
+    getMarkedAttributes,
+    deleteProjectsAssignToAttributes,
+    createDiatrictEvent
 }
