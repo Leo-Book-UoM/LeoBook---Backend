@@ -10,6 +10,7 @@ const { getProjectsCount, getTasksDetails, getprojectCountsForMonths, getupcommi
 const { getProjectReportingStatus, getPreviousMonthProjects, getGMParticipents, getPreviousMonthProjectNames, getAttributes, markAttribute, getPreviousMonthAssignedProjectNames, getMarkedAttributes, deleteProjectsAssignToAttributes, createDiatrictEvent} = require('../../controllers/secretaryControllers/secretaryControllers');
 const { createGeneralMeeting, getAllGeneralMeetings, getaGMAttendance, markAttendance } = require('../../controllers/meetingController/meetingController');
 const { getThisMonthDiastrictEvents } = require('../../controllers/destrictEventController/districtEventController');
+const { AddMember, getMembershipCounts } = require('../../controllers/membershipControllers/membershipController');
 
 const router = express.Router();
 
@@ -70,6 +71,10 @@ router.post('/api/createGeneralMeeting',upload.single("image"),createGeneralMeet
 router.get('/api/getAllGeneralMeetings',getAllGeneralMeetings);
 router.get('/api/getGMAttendance/:meetingId',getaGMAttendance);
 router.patch('/api/markAttendance/:generalMeetingId',markAttendance);
+
+//Routes for membership operations
+router.post('/api/addMember',AddMember);
+router.get('/api/getMembershipCounts',getMembershipCounts);
 
 // Route for user operations
 router.get('/api/getAllUsers',verifyToken, getAllUsers);
