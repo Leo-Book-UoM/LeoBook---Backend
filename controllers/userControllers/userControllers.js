@@ -38,7 +38,35 @@ const getUserName = async (req, res) => {
   }
 };
 
+//get user detailes according the userId
+const getUserDetails = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const query = `
+    SELECT u."userName", u."email", u."mobile", u."dob", u."addedAt", added_by_user."userName" AS "addedByName", u."image"
+    FROM public.users u
+    LEFT JOIN public.users added_by_user
+    ON u."addedBy" = added_by_user."userId"
+    WHERE u."userId" = $1;`;
+
+    const values = [userId];
+
+    const result = await pool.query(query, values);
+
+    if (result.rows.length > 0) {
+      res.status(200).json(result.rows[0]);
+    } else {
+      res.status(404).json({ message: `No user found with userId: ${userId}` });
+    }
+  } catch (err) {
+    console.error('Error fetching user details:', err);
+    res.status(500).json({ error: 'Server Error', details: err.message });
+  }
+};
+
+
   module.exports = {
     getAllUsersNP,
-    getUserName
+    getUserName,
+    getUserDetails,
   }

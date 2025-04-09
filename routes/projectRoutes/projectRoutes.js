@@ -5,12 +5,13 @@ const { getAllProjects, getFilteredProjects, createProject, createTask, getTasks
 const {getProjectBudgetDetailes, addBudgetDetails, deleteBudgetDetailes } = require('../../controllers/treasureControllers/projectTreasureControllers');
 const { registerUser, loginUser, getAllUsers, authUser, logoutUser } = require('../../controllers/authController/authController');
 const { refreshToken } = require('../../controllers/authController/refreshToken');
-const { getAllUsersNP, getUserName } = require('../../controllers/userControllers/userControllers');
+const { getAllUsersNP, getUserName, getUserDetails } = require('../../controllers/userControllers/userControllers');
 const { getProjectsCount, getTasksDetails, getprojectCountsForMonths, getupcommingProjects, getAttributesCount, getTreasureDetailes, getUpcommingProjectNames } = require('../../controllers/presidentController/presidentController');
 const { getProjectReportingStatus, getPreviousMonthProjects, getGMParticipents, getPreviousMonthProjectNames, getAttributes, markAttribute, getPreviousMonthAssignedProjectNames, getMarkedAttributes, deleteProjectsAssignToAttributes, createDiatrictEvent} = require('../../controllers/secretaryControllers/secretaryControllers');
 const { createGeneralMeeting, getAllGeneralMeetings, getaGMAttendance, markAttendance } = require('../../controllers/meetingController/meetingController');
 const { getThisMonthDiastrictEvents } = require('../../controllers/destrictEventController/districtEventController');
-const { AddMember, getMembershipCounts } = require('../../controllers/membershipControllers/membershipController');
+const { AddMember, getMembershipCounts, getAllMembers, deleteMember } = require('../../controllers/membershipControllers/membershipController');
+const { uploadProjectReport, getAllProjectReport, getProjectReport, uploadProjectProposels, getProjectProposal, getLastMonthProjectReport} = require('../../controllers/reportControllers/reportControllers');
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.post('/api/addproject',upload.single("image"), createProject);
 
 // Route for project treasure operations
 router.get('/api/getprojectBudget/:projectId', getProjectBudgetDetailes);
-router.post('/api/addprojectBudget/:projectId', addBudgetDetails);
+router.post('/api/addprojectBudget/:projectId', upload.single('bill'),addBudgetDetails);
 router.delete('/api/treasure',deleteBudgetDetailes);
 
 // Route for task operations
@@ -75,9 +76,20 @@ router.patch('/api/markAttendance/:generalMeetingId',markAttendance);
 //Routes for membership operations
 router.post('/api/addMember',AddMember);
 router.get('/api/getMembershipCounts',getMembershipCounts);
+router.get('/api/getAllMembers',getAllMembers);
 
 // Route for user operations
 router.get('/api/getAllUsers',verifyToken, getAllUsers);
 router.get('/api/getUserNames/:roleName',getUserName);
+router.get('/api/getUserDetails/:userId',getUserDetails);
+router.delete('/api/dropMember/:memberId',deleteMember);
+
+// Route for reporting operations
+router.patch('/api/report/:projectId', upload.single("report"), uploadProjectReport );
+router.get('/api/getAllreports', getAllProjectReport);
+router.get('/api/getReport/:projectId', getProjectReport);
+router.patch('/api/setProposal/:projectId', uploadProjectProposels);
+router.get('/api/getProposal/:projectId', getProjectProposal);
+router.get('/api/lastMonthProjectReports', getLastMonthProjectReport);
 
 module.exports = router;
