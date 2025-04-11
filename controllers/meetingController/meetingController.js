@@ -137,9 +137,29 @@ const markAttendance = async (req, res) => {
 };
 
 
+// Fetch  past 11 month's general meetings
+const getAllGMsummary = async (req, res) => {
+  try {
+    const query = `
+       SELECT "meetingId", "meetingName", "date"
+      FROM public."generalMeetings"
+      WHERE "date" IS NOT NULL
+      ORDER BY "date" DESC
+      LIMIT 11;`;
+
+    const result = await pool.query(query);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server Error' });
+  }
+};
+
+
 module.exports = { 
   createGeneralMeeting,
   getAllGeneralMeetings,
   getaGMAttendance,
-  markAttendance
+  markAttendance,
+  getAllGMsummary
  };
