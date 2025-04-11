@@ -40,7 +40,7 @@ const getFilteredProjects = async (req, res) => {
 
 // create project
 const createProject = async (req, res) => {
-  const { title, date, time, location, category, status, chairman, secretary, treasurer } = req.body;
+  const { title, date, time, location, category, status,director, chairman, secretary, treasurer } = req.body;
   const image = req.file ? req.file.filename : null;
 
   try {
@@ -61,8 +61,8 @@ const createProject = async (req, res) => {
     const imagePath = image ? `/uploads/${image}` : null;
 
     const query = `
-      INSERT INTO public.projects (projectname, date, "time", venue, category, image, status, chairman, secretary, treasure)  
-      VALUES  ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;
+      INSERT INTO public.projects (projectname, date, "time", venue, category, image, status, chairman, secretary, treasure, director)  
+      VALUES  ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11) RETURNING *;
     `;
 
     const values = [
@@ -75,7 +75,8 @@ const createProject = async (req, res) => {
       status || 1,
       chairman || null,
       secretary || null,
-      treasurer || null
+      treasurer || null,
+      director || null,
     ];
 
     const result = await pool.query(query, values);
