@@ -1,14 +1,14 @@
 const express = require('express');
 const verifyToken = require('../../middleware/authmiddleware');
 const upload  = require('../../middleware/upload');
-const { getAllProjects, getFilteredProjects, createProject, createTask, getTasksByProjetId, deleteTaskById , editTask} = require('../../controllers/projectControllers/projectControllers');
+const { getAllProjects, getFilteredProjects, createProject, createTask, getTasksByProjetId, deleteTaskById , editTask, getUserProjects} = require('../../controllers/projectControllers/projectControllers');
 const {getProjectBudgetDetailes, addBudgetDetails, deleteBudgetDetailes } = require('../../controllers/treasureControllers/projectTreasureControllers');
 const { registerUser, loginUser, getAllUsers, authUser, logoutUser } = require('../../controllers/authController/authController');
 const { refreshToken } = require('../../controllers/authController/refreshToken');
-const { getAllUsersNP, getUserName, getUserDetails, getParticipatedGMs, getUserProjectAttendance, getDirectorProjectCount, getProspectProjectCount } = require('../../controllers/userControllers/userControllers');
+const { getAllUsersNP, getUserName, getUserDetails, getParticipatedGMs, getUserProjectAttendance, getDirectorProjectCount, getProspectProjectCount, uploadProfilePic } = require('../../controllers/userControllers/userControllers');
 const { getProjectsCount, getTasksDetails, getprojectCountsForMonths, getupcommingProjects, getAttributesCount, getTreasureDetailes, getUpcommingProjectNames } = require('../../controllers/presidentController/presidentController');
 const { getProjectReportingStatus, getPreviousMonthProjects, getGMParticipents, getPreviousMonthProjectNames, getAttributes, markAttribute, getPreviousMonthAssignedProjectNames, getMarkedAttributes, deleteProjectsAssignToAttributes, createDiatrictEvent} = require('../../controllers/secretaryControllers/secretaryControllers');
-const { createGeneralMeeting, getAllGeneralMeetings, getaGMAttendance, markAttendance, getAllGMsummary } = require('../../controllers/meetingController/meetingController');
+const { createGeneralMeeting, getAllGeneralMeetings, getaGMAttendance, markAttendance, getAllGMsummary, getupcommingMeetings } = require('../../controllers/meetingController/meetingController');
 const { getThisMonthDiastrictEvents } = require('../../controllers/destrictEventController/districtEventController');
 const { AddMember, getMembershipCounts, getAllMembers, deleteMember } = require('../../controllers/membershipControllers/membershipController');
 const { uploadProjectReport, getAllProjectReport, getProjectReport, uploadProjectProposels, getProjectProposal, getLastMonthProjectReport} = require('../../controllers/reportControllers/reportControllers');
@@ -19,8 +19,8 @@ const router = express.Router();
 // Routes for project operations
 router.get('/api/projects', getAllProjects);
 router.get('/api/projects/7', getFilteredProjects);
-//router.post('/api/addproject',createProject);
 router.post('/api/addproject',upload.single("image"), createProject);
+router.get('/api/getUserProjects/:userId',getUserProjects);
 
 // Route for project treasure operations
 router.get('/api/getprojectBudget/:projectId', getProjectBudgetDetailes);
@@ -73,6 +73,7 @@ router.post('/api/createGeneralMeeting',upload.single("image"),createGeneralMeet
 router.get('/api/getAllGeneralMeetings',getAllGeneralMeetings);
 router.get('/api/getGMAttendance/:meetingId',getaGMAttendance);
 router.patch('/api/markAttendance/:generalMeetingId',markAttendance);
+router.get('/api/upcommingMeetings',getupcommingMeetings);
 
 //Routes for membership operations
 router.post('/api/addMember',AddMember);
@@ -100,5 +101,6 @@ router.get('/api/getAllGMdetails',getAllGMsummary);
 router.get('/api/getUserProjectAttendance/:userId',getUserProjectAttendance);
 router.get('/api/directorProjectCount/:userId',getDirectorProjectCount);
 router.get('/api/prospectProjectCount/:userId',getProspectProjectCount);
+router.patch('/api/updateProPic/:userId',upload.single("image"),uploadProfilePic);
 
 module.exports = router;

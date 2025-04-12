@@ -37,6 +37,7 @@ const uploadProjectReport = async (req, res) => {
         res.status(500).json({ error: 'Server Error'});
 }
 };
+
 //get all projet reports
 const getAllProjectReport = async (req, res) => {
     try {

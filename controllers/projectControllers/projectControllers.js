@@ -156,8 +156,6 @@ const deleteTaskById = async (req, res) => {
                   RETURNING *;`;
     const values = [projectId,taskId];
 
-    console.log('Deleting task with projectId:', projectId, 'taskId:', taskId);
-
     const result = await pool.query(query, values);
 
     if(result.rowCount > 0){
@@ -231,6 +229,32 @@ const editTask = async (req, res) => {
   }
 };
 
+// Fetch user projects
+const getUserProjects = async (req, res) => {
+  const { userId } = req.params
+  try {
+    const query = `
+      SELECT "projectId" , "projectname", "date", "time" , "venue", "image" 
+      FROM public.projects
+      WHERE "director" = $1 OR "chairman" = $1 OR "secretary" = $1
+      ORDER BY "date"`;
+
+    const values = [userId]
+    const result = await pool.query(query, values);
+
+    const projectWithImages = result.rows.map(project => {
+      return {
+        ...project,
+        image: project.image ? `http://localhost:5000${project.image}`: null,
+      };
+    });
+    res.status(200).json(projectWithImages);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server Error' });
+  }
+};
+
 
 module.exports = {
   getAllProjects,
@@ -240,4 +264,5 @@ module.exports = {
   getTasksByProjetId,
   deleteTaskById,
   editTask,
+  getUserProjects
 };
