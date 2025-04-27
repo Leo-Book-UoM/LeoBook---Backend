@@ -25,7 +25,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Routes
 app.use(projectsRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 443;
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
