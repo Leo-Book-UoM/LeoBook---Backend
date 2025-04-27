@@ -13,6 +13,7 @@ const { getThisMonthDiastrictEvents } = require('../../controllers/destrictEvent
 const { AddMember, getMembershipCounts, getAllMembers, deleteMember } = require('../../controllers/membershipControllers/membershipController');
 const { uploadProjectReport, getAllProjectReport, getProjectReport, uploadProjectProposels, getProjectProposal, getLastMonthProjectReport} = require('../../controllers/reportControllers/reportControllers');
 const { getAllDirectorPositions } = require('../../controllers/officerControllers/officerController');
+const { createAttribute, getAttributesList, deleteAttribute } = require('../../controllers/attributeControllers/attributeController');
 
 const router = express.Router();
 
@@ -63,6 +64,9 @@ router.get('/api/getAttributes',getAttributes);
 router.get('/api/getMarkedAttributes',getMarkedAttributes);
 router.post('/api/markAttribute',markAttribute);
 router.delete('/api/deleteAssigning',deleteProjectsAssignToAttributes);
+router.post('/api/addAttribute',createAttribute);
+router.get('/api/getAttributesList',getAttributesList);
+router.delete('/api/deleteAttribute/:attributeId',deleteAttribute);
 
 //Routes for event operations
 router.post('/api/createEvent',upload.single("image"),createDiatrictEvent);
