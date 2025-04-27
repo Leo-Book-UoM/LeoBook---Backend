@@ -10,12 +10,21 @@ const app = express();
 app.use(cookieParser());
 
 // Middleware
+const allowedOrigins = ['https://uomleosleobook.vercel.app', 'http://localhost:3000']; // Add any other origins you need
+
 app.use(cors({
-  origin: 'https://uomleosleobook.vercel.app', 
+  origin: function (origin, callback) {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
+  credentials: true, // Allow cookies
 }));
+
 
 app.use(express.json());
 
