@@ -109,7 +109,7 @@ const authUser = async (req, res) => {
             return res.status(401).send({ message: 'Unauthorized: Invalid token' });
         }
 
-        const user = await pool.query(`SELECT u."userName", r."roleName"
+        const user = await pool.query(`SELECT u."userName", r."roleName", u."userId", u."image"
                                         FROM public.users u
                                         Join public.roles r
                                         ON u."roleId" = r."roleId"

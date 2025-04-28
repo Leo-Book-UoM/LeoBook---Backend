@@ -149,7 +149,7 @@ const getPreviousMonthAssignedProjectNames = async (req, res) => {
 const getAttributes = async (req, res) => {
   try{
       const query = `
-      SELECT "attributeName" , "attributeId"
+      SELECT "attributeName" , "attributeId" 
       FROM public."projectAttributes"
       ORDER BY "attributeId" ASC ;`
 

@@ -40,7 +40,7 @@ const getFilteredProjects = async (req, res) => {
 
 // create project
 const createProject = async (req, res) => {
-  const { title, date, time, location, category, status, chairman, secretary, treasurer } = req.body;
+  const { title, date, time, location, category, status,director, chairman, secretary, treasurer } = req.body;
   const image = req.file ? req.file.filename : null;
 
   try {
@@ -61,8 +61,8 @@ const createProject = async (req, res) => {
     const imagePath = image ? `/uploads/${image}` : null;
 
     const query = `
-      INSERT INTO public.projects (projectname, date, "time", venue, category, image, status, chairman, secretary, treasure)  
-      VALUES  ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;
+      INSERT INTO public.projects (projectname, date, "time", venue, category, image, status, chairman, secretary, treasure, director)  
+      VALUES  ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11) RETURNING *;
     `;
 
     const values = [
@@ -75,7 +75,8 @@ const createProject = async (req, res) => {
       status || 1,
       chairman || null,
       secretary || null,
-      treasurer || null
+      treasurer || null,
+      director || null,
     ];
 
     const result = await pool.query(query, values);
@@ -155,8 +156,6 @@ const deleteTaskById = async (req, res) => {
                   RETURNING *;`;
     const values = [projectId,taskId];
 
-    console.log('Deleting task with projectId:', projectId, 'taskId:', taskId);
-
     const result = await pool.query(query, values);
 
     if(result.rowCount > 0){
@@ -230,6 +229,32 @@ const editTask = async (req, res) => {
   }
 };
 
+// Fetch user projects
+const getUserProjects = async (req, res) => {
+  const { userId } = req.params
+  try {
+    const query = `
+      SELECT "projectId" , "projectname", "date", "time" , "venue", "image" 
+      FROM public.projects
+      WHERE "director" = $1 OR "chairman" = $1 OR "secretary" = $1
+      ORDER BY "date"`;
+
+    const values = [userId]
+    const result = await pool.query(query, values);
+
+    const projectWithImages = result.rows.map(project => {
+      return {
+        ...project,
+        image: project.image ? `http://localhost:5000${project.image}`: null,
+      };
+    });
+    res.status(200).json(projectWithImages);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server Error' });
+  }
+};
+
 
 module.exports = {
   getAllProjects,
@@ -239,4 +264,5 @@ module.exports = {
   getTasksByProjetId,
   deleteTaskById,
   editTask,
+  getUserProjects
 };

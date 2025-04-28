@@ -137,9 +137,55 @@ const markAttendance = async (req, res) => {
 };
 
 
+// Fetch  past 11 month's general meetings
+const getAllGMsummary = async (req, res) => {
+  try {
+    const query = `
+       SELECT "meetingId", "meetingName", "date"
+      FROM public."generalMeetings"
+      WHERE "date" IS NOT NULL
+      ORDER BY "date" DESC
+      LIMIT 11;`;
+
+    const result = await pool.query(query);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server Error' });
+  }
+};
+
+//get upcomming meetings
+const getupcommingMeetings = async (req, res) => {
+  try {
+    const query = `
+      SELECT  "meetingId" , "meetingName", date, "time", location, image 
+      FROM public."generalMeetings"
+      WHERE date IS NOT NULL 
+      AND date > CURRENT_DATE
+      ORDER BY date`;
+
+    const result = await pool.query(query);
+
+    const projectWithImages = result.rows.map(project => {
+      return {
+        ...project,
+        image: project.image ? `http://localhost:5000${project.image}`: null,
+      };
+    });
+    res.status(200).json(projectWithImages);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server Error' });
+  }
+};
+
+
 module.exports = { 
   createGeneralMeeting,
   getAllGeneralMeetings,
   getaGMAttendance,
-  markAttendance
+  markAttendance,
+  getAllGMsummary,
+  getupcommingMeetings
  };

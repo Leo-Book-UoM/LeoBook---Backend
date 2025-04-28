@@ -2,16 +2,28 @@ const pool = require('../../config/dbConfig');
 
 //get project income detailes detailes
 const getProjectBudgetDetailes = async (req, res) => {
-    const  { projectId} = req.params;
+    const { projectId } = req.params;
+
     try {
         const query = `
-            SELECT description , amount
+            SELECT description, amount, bill, 
+                   (SELECT SUM(amount) FROM public."projectBudget" WHERE "projectId" = $1) AS "totalAmount"
             FROM public."projectBudget"
             WHERE "projectId" = $1
-            ORDER BY "budgetId" ASC  `;
+            ORDER BY "budgetId" ASC;
+        `;
 
-        const result = await pool.query(query,[projectId]);
-        res.status(200).json(result.rows);
+        const result = await pool.query(query, [projectId]);
+
+        const projectWithBill = result.rows.map(project => {
+            return {
+                ...project,
+                bill: project.bill ? `http://localhost:5000${project.bill}` : null, // Add the full URL here
+            };
+        });
+
+        res.status(200).json(projectWithBill);
+
     } catch (err) {
         console.error("Database Error:", err);
         res.status(500).json({ error: err.message || 'Server Error' });
@@ -22,21 +34,22 @@ const getProjectBudgetDetailes = async (req, res) => {
 
 const addBudgetDetails = async (req, res) => {
     const { projectId } = req.params;
-    const { description } = req.body;
+    const { description, amount } = req.body;
+    const bill = req.file ? `/uploads/${req.file.filename}` : null;
 
     try {
-        if (!description || !Array.isArray(description)) {
-            return res.status(400).json({ error: "Description must be an array" });
+        if (!description || !amount) {
+            return res.status(400).json({ error: "Description and amount are required" });
         }
 
-        const descriptionJSONB = JSON.stringify(description); 
-        const totalAmount = description.reduce((sum, item) => sum + parseFloat(item.amount), 0);
-
+        const updatedDate = new Date();
         const query = `
-            INSERT INTO public."projectBudget" ("projectId", "description", "amount") 
-            VALUES ($1, $2::jsonb, $3) RETURNING *`;
+            INSERT INTO public."projectBudget" ("projectId", "description", "amount", bill, "updatedDate") 
+            VALUES ($1, $2, $3, $4, $5) RETURNING *;
+        `;
 
-        const { rows } = await pool.query(query, [projectId, descriptionJSONB, totalAmount]);
+        const { rows } = await pool.query(query, [projectId, description, amount, bill, updatedDate]);
+
         res.status(201).json(rows[0]);
 
     } catch (err) {
