@@ -75,10 +75,11 @@ const loginUser = async (req, res) => {
         // Set HTTP-only cookies
         res.cookie('accessToken', accessToken, { 
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge:  60* 60 * 1000, // 1 hour
-        });
+            secure: true, // always true if your domain is https
+            sameSite: 'None', // 👈 MUST BE 'None' for cross-site cookies
+            maxAge: 60 * 60 * 1000, // 1 hour
+          });
+          
 
         res.cookie('refreshToken', refreshToken, { 
             httpOnly: true,
