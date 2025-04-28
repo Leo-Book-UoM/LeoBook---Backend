@@ -10,7 +10,7 @@ const app = express();
 app.use(cookieParser());
 
 // Middleware
-const allowedOrigins = ['https://uomleosleobook.vercel.app', 'http://localhost:3000']; // Add any other origins you need
+const allowedOrigins = ['https://uomleosleobook.vercel.app/', 'http://localhost:3000']; 
 
 app.use(cors({
   origin: function (origin, callback) {
