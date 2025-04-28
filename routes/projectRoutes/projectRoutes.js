@@ -5,7 +5,7 @@ const { getAllProjects, getFilteredProjects, createProject, createTask, getTasks
 const {getProjectBudgetDetailes, addBudgetDetails, deleteBudgetDetailes } = require('../../controllers/treasureControllers/projectTreasureControllers');
 const { registerUser, loginUser, getAllUsers, authUser, logoutUser } = require('../../controllers/authController/authController');
 const { refreshToken } = require('../../controllers/authController/refreshToken');
-const { getAllUsersNP, getUserName, getUserDetails, getParticipatedGMs, getUserProjectAttendance, getDirectorProjectCount, getProspectProjectCount, uploadProfilePic } = require('../../controllers/userControllers/userControllers');
+const { getAllUsersNP, getUserName, getUserDetails, getParticipatedGMs, getUserProjectAttendance, getDirectorProjectCount, getProspectProjectCount, uploadProfilePic, addUser } = require('../../controllers/userControllers/userControllers');
 const { getProjectsCount, getTasksDetails, getprojectCountsForMonths, getupcommingProjects, getAttributesCount, getTreasureDetailes, getUpcommingProjectNames } = require('../../controllers/presidentController/presidentController');
 const { getProjectReportingStatus, getPreviousMonthProjects, getGMParticipents, getPreviousMonthProjectNames, getAttributes, markAttribute, getPreviousMonthAssignedProjectNames, getMarkedAttributes, deleteProjectsAssignToAttributes, createDiatrictEvent} = require('../../controllers/secretaryControllers/secretaryControllers');
 const { createGeneralMeeting, getAllGeneralMeetings, getaGMAttendance, markAttendance, getAllGMsummary, getupcommingMeetings } = require('../../controllers/meetingController/meetingController');
@@ -37,7 +37,7 @@ router.put('/api/editTask/:projectId/:taskId', editTask);
 // Route for authentication operations
 router.post('/api/register',registerUser);
 router.post('/api/login', loginUser);
-router.get('/api/authUser',authUser);
+router.get('/api/authuser',authUser);
 router.post('/api/logout',logoutUser);
 router.post('/api/refresh',refreshToken);
 
@@ -89,6 +89,7 @@ router.get('/api/getAllUsers',verifyToken, getAllUsers);
 router.get('/api/getUserNames/:roleName',getUserName);
 router.get('/api/getUserDetails/:userId',getUserDetails);
 router.delete('/api/dropMember/:memberId',deleteMember);
+router.post('/api/addUser',addUser)
 
 // Route for reporting operations
 router.patch('/api/report/:projectId', upload.single("report"), uploadProjectReport );

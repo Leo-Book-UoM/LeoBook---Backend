@@ -1,4 +1,79 @@
 const pool = require('../../config/dbConfig');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer')
+
+// Function to generate random password
+const generateRandomPassword = (length = 10) => {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const specialChars = '!@#$%^&*()_+[]{}|;:,.<>?';
+
+  let password = '';
+
+  // Ensure at least one letter, one number, and one special character
+  password += letters.charAt(Math.floor(Math.random() * letters.length));
+  password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+  password += specialChars.charAt(Math.floor(Math.random() * specialChars.length));
+
+  // Fill the rest with random characters from all combined
+  const allChars = letters + numbers + specialChars;
+  for (let i = 3; i < length; i++) {
+    password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+  }
+
+  // Shuffle password so guaranteed characters aren't always in the same position
+  return password
+    .split('')
+    .sort(() => 0.5 - Math.random())
+    .join('');
+};
+
+
+// Create transporter for sending email (adjust this config)
+const transporter = nodemailer.createTransport({
+  service: 'Gmail', // or use 'smtp.yourdomain.com'
+  auth: {
+    user: 'pramodhaldp.21@itfac.mrt.ac.lk',    // your email
+    pass: 'vwcw xodh ixxt sedj',     // your email password (or app password if using Gmail)
+  },
+});
+
+// Add new user function
+const addUser = async (req, res) => {
+  const { userName, email, mobile, dob, addedBy, image } = req.body;
+
+  try {
+    // Step 1: Generate random password
+    const password = generateRandomPassword(8);
+
+    // Step 2: Insert user into the database
+    const insertQuery = `
+      INSERT INTO public.users ("userName", "email", "mobile", "dob", "addedBy", "image", "password", "addedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+      RETURNING "userId", "userName", "email"
+    `;
+    const values = [userName, email, mobile, dob, addedBy, image, password];
+
+    const result = await pool.query(insertQuery, values);
+
+    const newUser = result.rows[0];
+
+    // Step 3: Send email with password
+    const mailOptions = {
+      from: '"Leo book" pramodhaldp.21@itfac.mrt.ac.lk',
+      to: newUser.email,
+      subject: 'Your Account Details',
+      text: `Hello ${newUser.userName},\n\nYour account has been created.\n\nYour temporary password is: ${password}\n\nPlease log in and change your password.\n\nThank you!`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(201).json({ message: 'User created and password sent via email.', user: newUser });
+  } catch (err) {
+    console.error('Error adding user:', err);
+    res.status(500).json({ error: 'Server Error', details: err.message });
+  }
+};
 
 // Fetch all Users with optional name search
 const getAllUsersNP = async (req, res) => {
@@ -220,5 +295,6 @@ const uploadProfilePic = async (req, res) => {
     getUserProjectAttendance,
     getDirectorProjectCount,
     getProspectProjectCount,
-    uploadProfilePic
+    uploadProfilePic,
+    addUser
   }
