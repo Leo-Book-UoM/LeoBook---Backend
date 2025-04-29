@@ -4,26 +4,29 @@ const pool = require('../../config/dbConfig');
 const getAllProjects = async (req, res) => {
   try {
     const query = `
-      SELECT "projectId" , "projectname", "date", "time" , "venue", "image" 
+      SELECT "projectId", "projectname", "date", "time", "venue", "image" 
       FROM public.projects
       WHERE date IS NOT NULL 
-      AND  "date" > CURRENT_DATE
-      ORDER BY "date"`;
+      AND "date" > CURRENT_DATE
+      ORDER BY "date"
+    `;
 
     const result = await pool.query(query);
 
     const projectWithImages = result.rows.map(project => {
       return {
         ...project,
-        image: project.image ? `http://localhost:5000${project.image}`: null,
+        image: project.image || null, // ✅ just use the cloudinary link as it is
       };
     });
+
     res.status(200).json(projectWithImages);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server Error' });
   }
 };
+
 
 // Fetch filtered projects
 const getFilteredProjects = async (req, res) => {
