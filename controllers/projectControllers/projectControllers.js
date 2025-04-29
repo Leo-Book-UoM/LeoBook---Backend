@@ -40,8 +40,8 @@ const getFilteredProjects = async (req, res) => {
 
 // create project
 const createProject = async (req, res) => {
-  const { title, date, time, location, category, status,director, chairman, secretary, treasurer } = req.body;
-  const image = req.file ? req.file.filename : null;
+  const { title, date, time, location, category, status, director, chairman, secretary, treasurer } = req.body;
+  const image = req.file ? req.file.path : null; // ✅ use path instead of filename
 
   try {
     let validatedTime = null;
@@ -58,11 +58,9 @@ const createProject = async (req, res) => {
       }
     }
 
-    const imagePath = image ? `/uploads/${image}` : null;
-
     const query = `
       INSERT INTO public.projects (projectname, date, "time", venue, category, image, status, chairman, secretary, treasure, director)  
-      VALUES  ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11) RETURNING *;
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;
     `;
 
     const values = [
@@ -71,7 +69,7 @@ const createProject = async (req, res) => {
       validatedTime || null,
       location || null,
       category || null,
-      imagePath || null,
+      image || null, // ✅ directly use image URL here
       status || 1,
       chairman || null,
       secretary || null,
@@ -86,6 +84,7 @@ const createProject = async (req, res) => {
     res.status(500).json({ error: 'Server Error' });
   }
 };
+
 
 
 //create a new task
