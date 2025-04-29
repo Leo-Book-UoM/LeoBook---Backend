@@ -1,21 +1,6 @@
 const multer = require("multer");
-const fs = require("fs");
+const { storage } = require("./cloudinary"); // <-- this is from your cloudinary.js
 const path = require("path");
-
-const uploadDir = path.join(__dirname, "uploads"); // FIXED here
-
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        cb(null, uploadDir); 
-    },
-    filename: function(req, file, cb) {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    },
-});
 
 const fileFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|pdf/;
@@ -30,9 +15,9 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-    storage: storage,
+    storage: storage, // ✅ Using Cloudinary Storage
     fileFilter: fileFilter,
-    limits: { fileSize: 10 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });
 
 module.exports = upload;
