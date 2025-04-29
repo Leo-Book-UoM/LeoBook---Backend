@@ -254,37 +254,39 @@ const getProspectProjectCount = async (req, res) => {
 
 //uplord or update profile pic
 
-const uploadProfilePic = async (req, res) => {
+const uploadUserProfilePic = async (req, res) => {
   const { userId } = req.params;
 
-  if (!req.file) {
-      return res.status(400).json({ error: "No image uploaded" });
+  if (!req.file || !req.file.path) {
+    return res.status(400).json({ error: "No image uploaded" });
   }
-  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+  const imageUrl = req.file.path; // Cloudinary image URL
 
   try {
-      const query = `
+    const query = `
       UPDATE public.users
       SET "image" = $1
       WHERE "userId" = $2
       RETURNING *;
-      `;
-      const values = [imagePath, userId];
+    `;
+    const values = [imageUrl, userId];
 
-      const result = await pool.query(query, values);
-  
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: "User not found" });
-      }
-      res.status(200).json({
-          message: 'Profile picture uploaded successfully',
-          project: result.rows[0],
-          reportLink: imagePath
-      });
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({
+      message: 'Profile picture uploaded successfully',
+      user: result.rows[0],
+      imageUrl,
+    });
   } catch (error) {
-      console.error('Database Error:',error.message);
-      res.status(500).json({ error: 'Server Error'});
-}
+    console.error('Database Error:', error.message);
+    res.status(500).json({ error: 'Server Error' });
+  }
 };
 
   module.exports = {
