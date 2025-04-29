@@ -254,7 +254,7 @@ const getProspectProjectCount = async (req, res) => {
 
 //uplord or update profile pic
 
-const uploadUserProfilePic = async (req, res) => {
+const uploadProfilePic = async (req, res) => {
   const { userId } = req.params;
 
   if (!req.file || !req.file.path) {
