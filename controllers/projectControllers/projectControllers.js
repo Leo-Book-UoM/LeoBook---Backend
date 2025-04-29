@@ -7,7 +7,7 @@ const getAllProjects = async (req, res) => {
       SELECT "projectId", "projectname", "date", "time", "venue", "image" 
       FROM public.projects
       WHERE date IS NOT NULL 
-      AND "date" > CURRENT_DATE
+      AND "date" >= CURRENT_DATE
       ORDER BY "date"
     `;
 
@@ -233,29 +233,32 @@ const editTask = async (req, res) => {
 
 // Fetch user projects
 const getUserProjects = async (req, res) => {
-  const { userId } = req.params
+  const { userId } = req.params;
   try {
     const query = `
-      SELECT "projectId" , "projectname", "date", "time" , "venue", "image" 
+      SELECT "projectId", "projectname", "date", "time", "venue", "image"
       FROM public.projects
       WHERE "director" = $1 OR "chairman" = $1 OR "secretary" = $1
-      ORDER BY "date"`;
+      ORDER BY "date"
+    `;
 
-    const values = [userId]
+    const values = [userId];
     const result = await pool.query(query, values);
 
-    const projectWithImages = result.rows.map(project => {
+    const projectsWithImages = result.rows.map(project => {
       return {
         ...project,
-        image: project.image ? `http://localhost:5000${project.image}`: null,
+        image: project.image || null, // Assuming Cloudinary URL is stored in 'image'
       };
     });
-    res.status(200).json(projectWithImages);
+
+    res.status(200).json(projectsWithImages);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server Error' });
   }
 };
+
 
 
 module.exports = {
